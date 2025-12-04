@@ -5,10 +5,10 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-// #[cfg(test)]
-// mod mock;
-// #[cfg(test)]
-// mod tests;
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
 
 mod utils;
 
@@ -28,7 +28,7 @@ type ArkScale<T> = ark_scale::ArkScale<T>;
 pub use pallet::*;
 
 const MSM_LEN: u32 = 10;
-const SCALAR_WORDS: u32 = 3;
+// const SCALAR_WORDS: u32 = 3;
 
 #[frame::pallet]
 pub mod pallet {
@@ -182,7 +182,7 @@ pub mod pallet {
         }
 
         #[pallet::call_index(50)]
-        #[pallet::weight(10_000 + T::DbWeight::get().writes(0).ref_time())]
+        #[pallet::weight(Weight::from_all(10_000))]
         pub fn ark_ed_on_bls12_381_bandersnatch_mul_projective_te(
             _: OriginFor<T>,
             base: Vec<u8>,
@@ -202,7 +202,7 @@ pub mod pallet {
         }
 
         #[pallet::call_index(51)]
-        #[pallet::weight(Weight::from_parts(10_000, 0))]
+        #[pallet::weight(Weight::from_all(10_000))]
         pub fn sub_ed_on_bls12_381_bandersnatch_mul_projective_te(
             _: OriginFor<T>,
             base: Vec<u8>,
@@ -222,7 +222,7 @@ pub mod pallet {
         }
 
         #[pallet::call_index(52)]
-        #[pallet::weight(Weight::from_parts(10_000, 0))]
+        #[pallet::weight(Weight::from_all(10_000))]
         pub fn ark_ed_on_bls12_381_bandersnatch_mul_affine_sw(
             _: OriginFor<T>,
             base: Vec<u8>,
