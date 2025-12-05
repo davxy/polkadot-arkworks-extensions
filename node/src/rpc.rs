@@ -23,7 +23,10 @@
 #![warn(missing_docs)]
 
 use jsonrpsee::RpcModule;
-use minimal_template_runtime::{interface::{AccountId, Nonce}, opaque::Block};
+use minimal_template_runtime::{
+    interface::{AccountId, Nonce},
+    opaque::Block,
+};
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
@@ -32,30 +35,30 @@ use std::sync::Arc;
 
 /// Full client dependencies.
 pub struct FullDeps<C, P> {
-	/// The client instance to use.
-	pub client: Arc<C>,
-	/// Transaction pool instance.
-	pub pool: Arc<P>,
+    /// The client instance to use.
+    pub client: Arc<C>,
+    /// Transaction pool instance.
+    pub pool: Arc<P>,
 }
 
 #[docify::export]
 /// Instantiate all full RPC extensions.
 pub fn create_full<C, P>(
-	deps: FullDeps<C, P>,
+    deps: FullDeps<C, P>,
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
-	C: ProvideRuntimeApi<Block>,
-	C: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static,
-	C: Send + Sync + 'static,
-	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>,
-	C::Api: BlockBuilder<Block>,
-	P: TransactionPool + 'static,
+    C: ProvideRuntimeApi<Block>,
+    C: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static,
+    C: Send + Sync + 'static,
+    C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>,
+    C::Api: BlockBuilder<Block>,
+    P: TransactionPool + 'static,
 {
-	use substrate_frame_rpc_system::{System, SystemApiServer};
-	let mut module = RpcModule::new(());
-	let FullDeps { client, pool } = deps;
+    use substrate_frame_rpc_system::{System, SystemApiServer};
+    let mut module = RpcModule::new(());
+    let FullDeps { client, pool } = deps;
 
-	module.merge(System::new(client.clone(), pool.clone()).into_rpc())?;
+    module.merge(System::new(client.clone(), pool.clone()).into_rpc())?;
 
-	Ok(module)
+    Ok(module)
 }
