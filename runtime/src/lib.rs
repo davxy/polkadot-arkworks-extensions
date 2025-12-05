@@ -26,31 +26,39 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 extern crate alloc;
 
 use alloc::vec::Vec;
-use pallet_transaction_payment::{FeeDetails, RuntimeDispatchInfo};
-use polkadot_sdk::{
-    polkadot_sdk_frame::{
-        self as frame,
-        deps::sp_genesis_builder,
-        runtime::{apis, prelude::*},
-    },
-    *,
+use frame_support::{
+    derive_impl,
+    genesis_builder_helper::{build_state, get_preset},
+    parameter_types,
+    weights::{FixedFee, NoFee, Weight},
 };
+use pallet_transaction_payment::{FeeDetails, RuntimeDispatchInfo};
+use sp_api::impl_runtime_apis;
+use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
+use sp_inherents::{CheckInherentsResult, InherentData};
+use sp_runtime::{
+    generic,
+    traits::{BlakeTwo256, Block as BlockT, IdentifyAccount, Verify},
+    transaction_validity::{TransactionSource, TransactionValidity},
+    ApplyExtrinsicResult, ExtrinsicInclusionMode, MultiSignature,
+};
+#[cfg(feature = "std")]
+use sp_version::NativeVersion;
+use sp_version::RuntimeVersion;
 
 /// Provides getters for genesis configuration presets.
 pub mod genesis_config_presets {
     use super::*;
-    use crate::{
-        interface::{Balance, MinimumBalance},
-        sp_keyring::Sr25519Keyring,
-        BalancesConfig, RuntimeGenesisConfig, SudoConfig,
-    };
+    use crate::{interface::Balance, BalancesConfig, RuntimeGenesisConfig, SudoConfig};
 
     use alloc::{vec, vec::Vec};
     use serde_json::Value;
+    use sp_genesis_builder::PresetId;
+    use sp_keyring::Sr25519Keyring;
 
     /// Returns a development genesis config preset.
     pub fn development_config_genesis() -> Value {
-        let endowment = <MinimumBalance as Get<Balance>>::get().max(1) * 1000;
+        let endowment = Balance::max(1_000_000_000_000, 1) * 1000;
         frame_support::build_struct_json_patch!(RuntimeGenesisConfig {
             balances: BalancesConfig {
                 balances: Sr25519Keyring::iter()
@@ -83,7 +91,7 @@ pub mod genesis_config_presets {
 }
 
 /// The runtime version.
-#[runtime_version]
+#[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: alloc::borrow::Cow::Borrowed("minimal-template-runtime"),
     impl_name: alloc::borrow::Cow::Borrowed("minimal-template-runtime"),
@@ -132,7 +140,7 @@ type TxExtension = (
 );
 
 // Composes the runtime by adding all the used pallets and deriving necessary types.
-#[frame_construct_runtime]
+#[frame_support::runtime]
 mod runtime {
     /// The main runtime type.
     #[runtime::runtime]
@@ -145,38 +153,37 @@ mod runtime {
         RuntimeHoldReason,
         RuntimeSlashReason,
         RuntimeLockId,
-        RuntimeTask,
-        RuntimeViewFunction
+        RuntimeTask
     )]
     pub struct Runtime;
 
     /// Mandatory system pallet that should always be included in a FRAME runtime.
     #[runtime::pallet_index(0)]
-    pub type System = frame_system::Pallet<Runtime>;
+    pub type System = frame_system;
 
     /// Provides a way for consensus systems to set and check the onchain time.
     #[runtime::pallet_index(1)]
-    pub type Timestamp = pallet_timestamp::Pallet<Runtime>;
+    pub type Timestamp = pallet_timestamp;
 
     /// Provides the ability to keep track of balances.
     #[runtime::pallet_index(2)]
-    pub type Balances = pallet_balances::Pallet<Runtime>;
+    pub type Balances = pallet_balances;
 
     /// Provides a way to execute privileged functions.
     #[runtime::pallet_index(3)]
-    pub type Sudo = pallet_sudo::Pallet<Runtime>;
+    pub type Sudo = pallet_sudo;
 
     /// Provides the ability to charge for extrinsic execution.
     #[runtime::pallet_index(4)]
-    pub type TransactionPayment = pallet_transaction_payment::Pallet<Runtime>;
+    pub type TransactionPayment = pallet_transaction_payment;
 
     /// A minimal pallet template.
     #[runtime::pallet_index(5)]
-    pub type ArkHostcalls = pallet_ark_hostcalls::Pallet<Runtime>;
+    pub type ArkHostcalls = pallet_ark_hostcalls;
 
     /// A minimal pallet template.
     #[runtime::pallet_index(6)]
-    pub type Template = pallet_minimal_template::Pallet<Runtime>;
+    pub type Template = pallet_minimal_template;
 }
 
 parameter_types! {
@@ -221,19 +228,32 @@ impl pallet_minimal_template::Config for Runtime {}
 
 impl pallet_ark_hostcalls::Config for Runtime {}
 
-type Block = frame::runtime::types_common::BlockOf<Runtime, TxExtension>;
-type Header = HeaderFor<Runtime>;
+// Block and header types
+pub type Signature = MultiSignature;
+pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
+pub type Block = generic::Block<Header, UncheckedExtrinsic>;
+pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
+pub type BlockNumber = u32;
+pub type UncheckedExtrinsic =
+    generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, TxExtension>;
+pub type Address = sp_runtime::MultiAddress<AccountId, ()>;
+pub type SignedExtra = TxExtension;
 
-type RuntimeExecutive =
-    Executive<Runtime, Block, frame_system::ChainContext<Runtime>, Runtime, AllPalletsWithSystem>;
+type RuntimeExecutive = frame_executive::Executive<
+    Runtime,
+    Block,
+    frame_system::ChainContext<Runtime>,
+    Runtime,
+    AllPalletsWithSystem,
+>;
 
 impl_runtime_apis! {
-    impl apis::Core<Block> for Runtime {
+    impl sp_api::Core<Block> for Runtime {
         fn version() -> RuntimeVersion {
             VERSION
         }
 
-        fn execute_block(block: <Block as frame::traits::Block>::LazyBlock) {
+        fn execute_block(block: <Block as BlockT>::LazyBlock) {
             RuntimeExecutive::execute_block(block)
         }
 
@@ -241,7 +261,8 @@ impl_runtime_apis! {
             RuntimeExecutive::initialize_block(header)
         }
     }
-    impl apis::Metadata<Block> for Runtime {
+
+    impl sp_api::Metadata<Block> for Runtime {
         fn metadata() -> OpaqueMetadata {
             OpaqueMetadata::new(Runtime::metadata().into())
         }
@@ -255,57 +276,57 @@ impl_runtime_apis! {
         }
     }
 
-    impl apis::BlockBuilder<Block> for Runtime {
-        fn apply_extrinsic(extrinsic: ExtrinsicFor<Runtime>) -> ApplyExtrinsicResult {
+    impl sp_block_builder::BlockBuilder<Block> for Runtime {
+        fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
             RuntimeExecutive::apply_extrinsic(extrinsic)
         }
 
-        fn finalize_block() -> HeaderFor<Runtime> {
+        fn finalize_block() -> <Block as BlockT>::Header {
             RuntimeExecutive::finalize_block()
         }
 
-        fn inherent_extrinsics(data: InherentData) -> Vec<ExtrinsicFor<Runtime>> {
+        fn inherent_extrinsics(data: InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
             data.create_extrinsics()
         }
 
         fn check_inherents(
-            block: <Block as frame::traits::Block>::LazyBlock,
+            block: <Block as BlockT>::LazyBlock,
             data: InherentData,
         ) -> CheckInherentsResult {
             data.check_extrinsics(&block)
         }
     }
 
-    impl apis::TaggedTransactionQueue<Block> for Runtime {
+    impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
         fn validate_transaction(
             source: TransactionSource,
-            tx: ExtrinsicFor<Runtime>,
-            block_hash: <Runtime as frame_system::Config>::Hash,
+            tx: <Block as BlockT>::Extrinsic,
+            block_hash: <Block as BlockT>::Hash,
         ) -> TransactionValidity {
             RuntimeExecutive::validate_transaction(source, tx, block_hash)
         }
     }
 
-    impl apis::OffchainWorkerApi<Block> for Runtime {
-        fn offchain_worker(header: &HeaderFor<Runtime>) {
+    impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
+        fn offchain_worker(header: &<Block as BlockT>::Header) {
             RuntimeExecutive::offchain_worker(header)
         }
     }
 
-    impl apis::SessionKeys<Block> for Runtime {
+    impl sp_session::SessionKeys<Block> for Runtime {
         fn generate_session_keys(_seed: Option<Vec<u8>>) -> Vec<u8> {
             Default::default()
         }
 
         fn decode_session_keys(
             _encoded: Vec<u8>,
-        ) -> Option<Vec<(Vec<u8>, apis::KeyTypeId)>> {
+        ) -> Option<Vec<(Vec<u8>, KeyTypeId)>> {
             Default::default()
         }
     }
 
-    impl apis::AccountNonceApi<Block, interface::AccountId, interface::Nonce> for Runtime {
-        fn account_nonce(account: interface::AccountId) -> interface::Nonce {
+    impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, interface::Nonce> for Runtime {
+        fn account_nonce(account: AccountId) -> interface::Nonce {
             System::account_nonce(account)
         }
     }
@@ -314,10 +335,10 @@ impl_runtime_apis! {
         Block,
         interface::Balance,
     > for Runtime {
-        fn query_info(uxt: ExtrinsicFor<Runtime>, len: u32) -> RuntimeDispatchInfo<interface::Balance> {
+        fn query_info(uxt: <Block as BlockT>::Extrinsic, len: u32) -> RuntimeDispatchInfo<interface::Balance> {
             TransactionPayment::query_info(uxt, len)
         }
-        fn query_fee_details(uxt: ExtrinsicFor<Runtime>, len: u32) -> FeeDetails<interface::Balance> {
+        fn query_fee_details(uxt: <Block as BlockT>::Extrinsic, len: u32) -> FeeDetails<interface::Balance> {
             TransactionPayment::query_fee_details(uxt, len)
         }
         fn query_weight_to_fee(weight: Weight) -> interface::Balance {
@@ -328,16 +349,16 @@ impl_runtime_apis! {
         }
     }
 
-    impl apis::GenesisBuilder<Block> for Runtime {
+    impl sp_genesis_builder::GenesisBuilder<Block> for Runtime {
         fn build_state(config: Vec<u8>) -> sp_genesis_builder::Result {
             build_state::<RuntimeGenesisConfig>(config)
         }
 
-        fn get_preset(id: &Option<PresetId>) -> Option<Vec<u8>> {
-            get_preset::<RuntimeGenesisConfig>(id, self::genesis_config_presets::get_preset)
+        fn get_preset(id: &Option<sp_genesis_builder::PresetId>) -> Option<Vec<u8>> {
+            get_preset::<RuntimeGenesisConfig>(id, |id| self::genesis_config_presets::get_preset(id))
         }
 
-        fn preset_names() -> Vec<PresetId> {
+        fn preset_names() -> Vec<sp_genesis_builder::PresetId> {
             self::genesis_config_presets::preset_names()
         }
     }
@@ -350,10 +371,8 @@ impl_runtime_apis! {
 // https://github.com/paritytech/substrate/issues/10579#issuecomment-1600537558
 pub mod interface {
     use super::Runtime;
-    use polkadot_sdk::{polkadot_sdk_frame as frame, *};
 
     pub type Block = super::Block;
-    pub use frame::runtime::types_common::OpaqueBlock;
     pub type AccountId = <Runtime as frame_system::Config>::AccountId;
     pub type Nonce = <Runtime as frame_system::Config>::Nonce;
     pub type Hash = <Runtime as frame_system::Config>::Hash;
