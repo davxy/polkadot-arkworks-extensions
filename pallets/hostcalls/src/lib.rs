@@ -10,6 +10,9 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
 mod utils;
 
 use frame_support::pallet_prelude::*;
@@ -34,6 +37,28 @@ pub fn ed_on_bls12_381_bandersnatch_msm_sw<C: SWCurveConfig>(
     scalars: Vec<u8>,
 ) -> DispatchResult {
     use ark_ec::short_weierstrass::Affine;
+    let bases = ArkScale::<Vec<Affine<C>>>::decode(&mut bases.as_slice()).unwrap();
+    let scalars = ArkScale::<Vec<C::ScalarField>>::decode(&mut scalars.as_slice()).unwrap();
+    let _ = C::msm(&bases.0, &scalars.0);
+    Ok(())
+}
+
+// let bases = ArkScale::<Vec<ark_ed_on_bls12_381_bandersnatch::EdwardsAffine>>::decode(
+//     &mut bases.as_slice(),
+// )
+// .unwrap();
+// let scalars = ArkScale::<
+//     Vec<ScalarFieldFor<ark_ed_on_bls12_381_bandersnatch::EdwardsAffine>>,
+// >::decode(&mut scalars.as_slice())
+// .unwrap();
+// let _ = <ark_ed_on_bls12_381_bandersnatch::EdwardsConfig as TECurveConfig>::msm(
+//     &bases.0, &scalars.0,
+// );
+pub fn ed_on_bls12_381_bandersnatch_msm_te<C: TECurveConfig>(
+    bases: Vec<u8>,
+    scalars: Vec<u8>,
+) -> DispatchResult {
+    use ark_ec::twisted_edwards::Affine;
     let bases = ArkScale::<Vec<Affine<C>>>::decode(&mut bases.as_slice()).unwrap();
     let scalars = ArkScale::<Vec<C::ScalarField>>::decode(&mut scalars.as_slice()).unwrap();
     let _ = C::msm(&bases.0, &scalars.0);
@@ -76,42 +101,23 @@ pub mod pallet {
             }
         }
 
-        #[pallet::call_index(144)]
-        #[pallet::weight(Weight::from_all(10_000))]
-        pub fn ed_on_bls12_381_bandersnatch_msm_sw_rand(
-            origin: OriginFor<T>,
-            items: u32,
-            optimized: bool,
-        ) -> DispatchResult {
-            let (bases, scalars) =
-                utils::make_msm_args::<ark_ed_on_bls12_381_bandersnatch::SWProjective>(items);
-            Self::ed_on_bls12_381_bandersnatch_msm_sw(
-                origin,
-                bases.encode(),
-                scalars.encode(),
-                optimized,
-            )
-        }
-
         #[pallet::call_index(46)]
-        #[pallet::weight(10_000 + T::DbWeight::get().writes(0).ref_time())]
-        pub fn ark_ed_on_bls12_381_bandersnatch_msm_te(
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn ed_on_bls12_381_bandersnatch_msm_te(
             _origin: OriginFor<T>,
             bases: Vec<u8>,
             scalars: Vec<u8>,
+            optimized: bool,
         ) -> DispatchResult {
-            let bases = ArkScale::<Vec<ark_ed_on_bls12_381_bandersnatch::EdwardsAffine>>::decode(
-                &mut bases.as_slice(),
-            )
-            .unwrap();
-            let scalars = ArkScale::<
-                Vec<ScalarFieldFor<ark_ed_on_bls12_381_bandersnatch::EdwardsAffine>>,
-            >::decode(&mut scalars.as_slice())
-            .unwrap();
-            let _ = <ark_ed_on_bls12_381_bandersnatch::EdwardsConfig as TECurveConfig>::msm(
-                &bases.0, &scalars.0,
-            );
-            Ok(())
+            if optimized {
+                ed_on_bls12_381_bandersnatch_msm_te::<sub_ed_on_bls12_381_bandersnatch::SWConfig>(
+                    bases, scalars,
+                )
+            } else {
+                ed_on_bls12_381_bandersnatch_msm_te::<ark_ed_on_bls12_381_bandersnatch::SWConfig>(
+                    bases, scalars,
+                )
+            }
         }
 
         #[pallet::call_index(47)]
