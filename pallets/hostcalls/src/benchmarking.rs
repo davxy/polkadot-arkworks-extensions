@@ -25,6 +25,7 @@ mod benchmarks {
     fn ark_ed_on_bls12_381_bandersnatch_msm_sw(x: Linear<MSM_LEN_MIN, MSM_LEN_MAX>) {
         let (bases, scalars) =
             utils::make_msm_args::<ark_ed_on_bls12_381_bandersnatch::SWProjective>(x);
+
         #[extrinsic_call]
         ed_on_bls12_381_bandersnatch_msm_sw(
             RawOrigin::Signed(whitelisted_caller()),
@@ -50,7 +51,7 @@ mod benchmarks {
     #[benchmark]
     fn ark_ed_on_bls12_381_bandersnatch_msm_te(x: Linear<MSM_LEN_MIN, MSM_LEN_MAX>) {
         let (bases, scalars) =
-            utils::make_msm_args_te::<ark_ed_on_bls12_381_bandersnatch::EdwardsProjective>(x);
+            utils::make_msm_args::<ark_ed_on_bls12_381_bandersnatch::EdwardsProjective>(x);
         #[extrinsic_call]
         ed_on_bls12_381_bandersnatch_msm_te(
             RawOrigin::Signed(whitelisted_caller()),
@@ -63,7 +64,7 @@ mod benchmarks {
     #[benchmark]
     fn sub_ed_on_bls12_381_bandersnatch_msm_te(x: Linear<MSM_LEN_MIN, MSM_LEN_MAX>) {
         let (bases, scalars) =
-            utils::make_msm_args_te::<ark_ed_on_bls12_381_bandersnatch::EdwardsProjective>(x);
+            utils::make_msm_args::<ark_ed_on_bls12_381_bandersnatch::EdwardsProjective>(x);
         #[extrinsic_call]
         ed_on_bls12_381_bandersnatch_msm_te(
             RawOrigin::Signed(whitelisted_caller()),

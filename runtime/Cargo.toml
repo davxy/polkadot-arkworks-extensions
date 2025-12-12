@@ -48,8 +48,8 @@ frame-benchmarking = { optional = true, workspace = true }
 frame-system-benchmarking = { optional = true, workspace = true }
 
 # local pallet templates
-pallet-minimal-template = { path = "../pallets/template", default-features = false }
 pallet-ark-hostcalls = { path = "../pallets/hostcalls", default-features = false }
+pallet-ark-vrf = { path = "../pallets/ark-vrf", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { optional = true, workspace = true, default-features = true }
@@ -65,8 +65,8 @@ std = [
 	"frame-system-rpc-runtime-api/std",
 	"frame-system/std",
 	"pallet-balances/std",
-	"pallet-minimal-template/std",
 	"pallet-ark-hostcalls/std",
+	"pallet-ark-vrf/std",
 	"pallet-sudo/std",
 	"pallet-timestamp/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
@@ -92,11 +92,11 @@ runtime-benchmarks = [
 	"frame-support/runtime-benchmarks",
 	"frame-system-benchmarking/runtime-benchmarks",
 	"frame-system/runtime-benchmarks",
-	"pallet-ark-hostcalls/runtime-benchmarks",
+	"sp-runtime/runtime-benchmarks",
 	"pallet-balances/runtime-benchmarks",
-	"pallet-minimal-template/runtime-benchmarks",
 	"pallet-sudo/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
 	"pallet-transaction-payment/runtime-benchmarks",
-	"sp-runtime/runtime-benchmarks",
+	"pallet-ark-hostcalls/runtime-benchmarks",
+	"pallet-ark-vrf/runtime-benchmarks",
 ]

@@ -15,8 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! A minimal runtime that includes the template [`pallet`](`pallet_minimal_template`).
-
 #![cfg_attr(not(feature = "std"), no_std)]
 
 // Make the WASM binary available.
@@ -177,13 +175,13 @@ mod runtime {
     #[runtime::pallet_index(4)]
     pub type TransactionPayment = pallet_transaction_payment;
 
-    /// A minimal pallet template.
+    /// Arkworks hostcalls.
     #[runtime::pallet_index(5)]
     pub type ArkHostcalls = pallet_ark_hostcalls;
 
-    /// A minimal pallet template.
+    /// Arkworks VRF.
     #[runtime::pallet_index(6)]
-    pub type Template = pallet_minimal_template;
+    pub type ArkVrf = pallet_ark_vrf;
 }
 
 parameter_types! {
@@ -223,10 +221,15 @@ impl pallet_transaction_payment::Config for Runtime {
     type LengthToFee = FixedFee<1, <Self as pallet_balances::Config>::Balance>;
 }
 
-// Implements the types required for the template pallet.
-impl pallet_minimal_template::Config for Runtime {}
-
 impl pallet_ark_hostcalls::Config for Runtime {}
+
+parameter_types! {
+    pub MaxRingSize: u32 = 10;
+}
+
+impl pallet_ark_vrf::Config for Runtime {
+    type MaxRingSize = MaxRingSize;
+}
 
 // Opaque types for the node to use
 pub mod opaque {
@@ -274,6 +277,7 @@ frame_benchmarking::define_benchmarks!(
     [pallet_timestamp, Timestamp]
     [pallet_sudo, Sudo]
     [pallet_ark_hostcalls, ArkHostcalls]
+    [pallet_ark_vrf, ArkVrf]
 );
 
 #[cfg(feature = "runtime-benchmarks")]

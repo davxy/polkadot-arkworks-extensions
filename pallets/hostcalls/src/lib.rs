@@ -120,27 +120,6 @@ pub mod pallet {
             }
         }
 
-        #[pallet::call_index(47)]
-        #[pallet::weight(10_000 + T::DbWeight::get().writes(0).ref_time())]
-        pub fn sub_ed_on_bls12_381_bandersnatch_msm_te(
-            _origin: OriginFor<T>,
-            bases: Vec<u8>,
-            scalars: Vec<u8>,
-        ) -> DispatchResult {
-            let bases = ArkScale::<Vec<sub_ed_on_bls12_381_bandersnatch::EdwardsAffine>>::decode(
-                &mut bases.as_slice(),
-            )
-            .unwrap();
-            let scalars = ArkScale::<
-                Vec<ScalarFieldFor<sub_ed_on_bls12_381_bandersnatch::EdwardsAffine>>,
-            >::decode(&mut scalars.as_slice())
-            .unwrap();
-            let _ = <sub_ed_on_bls12_381_bandersnatch::EdwardsConfig as TECurveConfig>::msm(
-                &bases.0, &scalars.0,
-            );
-            Ok(())
-        }
-
         #[pallet::call_index(48)]
         #[pallet::weight(10_000 + T::DbWeight::get().writes(0).ref_time())]
         pub fn ark_ed_on_bls12_381_bandersnatch_mul_projective_sw(

@@ -5682,8 +5682,8 @@ dependencies = [
  "frame-system-benchmarking",
  "frame-system-rpc-runtime-api",
  "pallet-ark-hostcalls",
+ "pallet-ark-vrf",
  "pallet-balances",
- "pallet-minimal-template",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-payment",
@@ -6298,6 +6298,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-ark-vrf"
+version = "0.1.0"
+dependencies = [
+ "ark-vrf",
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-tracing",
+]
+
+[[package]]
 name = "pallet-asset-conversion"
 version = "10.0.0"
 source = "git+https://github.com/paritytech/polkadot-sdk#68c1250bbc3b28cfdec1e6effbaa91d9a8999b3d"
@@ -6417,20 +6434,6 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-weights",
-]
-
-[[package]]
-name = "pallet-minimal-template"
-version = "0.0.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
 ]
 
 [[package]]

@@ -11,7 +11,7 @@ resolver = "2"
 members = [
   "node",
   "runtime",
-  "pallets/template",
+  "pallets/ark-vrf",
   "pallets/hostcalls",
 ]
 
@@ -72,6 +72,7 @@ sp-storage = { git = "https://github.com/paritytech/polkadot-sdk", default-featu
 sp-timestamp = { git = "https://github.com/paritytech/polkadot-sdk", default-features = false }
 sp-transaction-pool = { git = "https://github.com/paritytech/polkadot-sdk", default-features = false }
 sp-version = { git = "https://github.com/paritytech/polkadot-sdk", default-features = false }
+sp-tracing = { git = "https://github.com/paritytech/polkadot-sdk", default-features = false }
 
 substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk", default-features = false }
 substrate-frame-rpc-system = { git = "https://github.com/paritytech/polkadot-sdk", default-features = false }
