@@ -53,5 +53,35 @@ mod benchmarks {
         ring_commit(RawOrigin::None, true);
     }
 
+    #[benchmark]
+    fn ark_ietf_vrf_verify() {
+        let (public_raw, input_raw, output_raw, proof_raw) = utils::ietf_verify_params_gen();
+
+        #[extrinsic_call]
+        ietf_verify(
+            RawOrigin::None,
+            public_raw,
+            input_raw,
+            output_raw,
+            proof_raw,
+            false,
+        );
+    }
+
+    #[benchmark]
+    fn sub_ietf_vrf_verify() {
+        let (public_raw, input_raw, output_raw, proof_raw) = utils::ietf_verify_params_gen();
+
+        #[extrinsic_call]
+        ietf_verify(
+            RawOrigin::None,
+            public_raw,
+            input_raw,
+            output_raw,
+            proof_raw,
+            true,
+        );
+    }
+
     impl_benchmark_test_suite!(ArkVrf, crate::mock::new_test_ext(), crate::mock::Test);
 }

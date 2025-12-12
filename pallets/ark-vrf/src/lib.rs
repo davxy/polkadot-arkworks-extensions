@@ -23,8 +23,6 @@ use ark_vrf::reexports::ark_std::vec::Vec;
 use ark_vrf::suites::bandersnatch as ark_bandersnatch;
 pub(crate) type ArkSuite = ark_bandersnatch::BandersnatchSha512Ell2;
 
-use ark_vrf::ring::RingSuite as RingSuiteT;
-
 mod sub_bandersnatch {
     use ark_vrf::{
         pedersen::PedersenSuite, ring::RingSuite, ring_suite_types, suite_types,
@@ -77,7 +75,12 @@ const SRS_PAGE_SIZE: usize = 1 << 3;
 
 type SrsItem = ark_vrf::ring::G1Affine<ark_bandersnatch::BandersnatchSha512Ell2>;
 
-const PUBLIC_KEY_SERIALIZED_SIZE: usize = 32;
+const COMPRESSED_POINT_SIZE: usize = 32;
+
+const IETF_SIGNATURE_SERIALIZED_SIZE: usize = 96;
+
+const SRS_ITEM_SERIALIZED_SIZE: usize = 48;
+const RING_BUILDER_SERIALIZED_SIZE: usize = 848;
 
 #[derive(
     Clone,
@@ -91,9 +94,11 @@ const PUBLIC_KEY_SERIALIZED_SIZE: usize = 32;
     DecodeWithMemTracking,
     Default,
 )]
-pub struct PublicKeyRaw(pub [u8; PUBLIC_KEY_SERIALIZED_SIZE]);
+pub struct CompressedPoint(pub [u8; COMPRESSED_POINT_SIZE]);
 
-const SRS_ITEM_SERIALIZED_SIZE: usize = 48;
+pub type PublicKeyRaw = CompressedPoint;
+pub type InputRaw = CompressedPoint;
+pub type OutputRaw = CompressedPoint;
 
 #[derive(
     Copy,
@@ -118,16 +123,32 @@ impl Default for SrsPage {
     }
 }
 
-const RING_BUILDER_SERIALIZED_SIZE: usize = 848;
-
 #[derive(MaxEncodedLen, Encode, Decode, TypeInfo)]
 pub struct RingBuilderRaw(pub [u8; RING_BUILDER_SERIALIZED_SIZE]);
+
+#[derive(
+    Copy,
+    Clone,
+    Eq,
+    PartialEq,
+    MaxEncodedLen,
+    Encode,
+    Decode,
+    TypeInfo,
+    DecodeWithMemTracking,
+    Debug,
+)]
+pub struct IetfSignatureRaw(pub [u8; IETF_SIGNATURE_SERIALIZED_SIZE]);
 
 #[frame_support::pallet]
 pub mod pallet {
     use core::ops::Range;
 
-    use ark_vrf::reexports::ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+    use ark_vrf::{
+        ietf::IetfSuite,
+        reexports::ark_serialize::{CanonicalDeserialize, CanonicalSerialize},
+        ring::RingSuite,
+    };
     use frame_system::pallet_prelude::OriginFor;
 
     use super::*;
@@ -247,10 +268,51 @@ pub mod pallet {
 
             Ok(())
         }
+
+        // ---------------------------------------------
+        // Calls for ietf-vrf
+        // ---------------------------------------------
+
+        #[pallet::call_index(10)]
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn ietf_verify(
+            _: OriginFor<T>,
+            public_raw: PublicKeyRaw,
+            input_raw: InputRaw,
+            output_raw: OutputRaw,
+            proof_raw: IetfSignatureRaw,
+            optimized: bool,
+        ) -> DispatchResult {
+            if optimized {
+                Self::ietf_verify_impl::<SubSuite>(public_raw, input_raw, output_raw, proof_raw);
+            } else {
+                Self::ietf_verify_impl::<ArkSuite>(public_raw, input_raw, output_raw, proof_raw);
+            }
+            Ok(())
+        }
     }
 
     impl<T: Config> Pallet<T> {
-        pub(crate) fn commit_impl<S: RingSuiteT>() {
+        pub(crate) fn ietf_verify_impl<S: IetfSuite>(
+            public_raw: PublicKeyRaw,
+            input_raw: InputRaw,
+            output_raw: OutputRaw,
+            proof_raw: IetfSignatureRaw,
+        ) {
+            use ark_vrf::ietf::Verifier;
+            let input =
+                ark_vrf::Input::<S>::deserialize_compressed_unchecked(&input_raw.0[..]).unwrap();
+            let output =
+                ark_vrf::Output::<S>::deserialize_compressed_unchecked(&output_raw.0[..]).unwrap();
+            let public =
+                ark_vrf::Public::<S>::deserialize_compressed_unchecked(&public_raw.0[..]).unwrap();
+            let proof =
+                ark_vrf::ietf::Proof::<S>::deserialize_compressed_unchecked(&proof_raw.0[..])
+                    .unwrap();
+            public.verify(input, output, &[], &proof).unwrap()
+        }
+
+        pub(crate) fn commit_impl<S: RingSuite>() {
             let builder_raw = RingBuilder::<T>::get().unwrap();
             let builder =
                 ark_vrf::ring::RingVerifierKeyBuilder::<S>::deserialize_uncompressed_unchecked(
@@ -260,7 +322,7 @@ pub mod pallet {
             let _verifier_key = builder.finalize();
         }
 
-        pub(crate) fn push_members_impl<S: RingSuiteT>(new_members: Vec<PublicKeyRaw>) {
+        pub(crate) fn push_members_impl<S: RingSuite>(new_members: Vec<PublicKeyRaw>) {
             let mut builder_raw = RingBuilder::<T>::get().unwrap();
             let lookup = |range: Range<usize>| Self::fetch_srs_chunks(range).ok();
             let mut builder =
