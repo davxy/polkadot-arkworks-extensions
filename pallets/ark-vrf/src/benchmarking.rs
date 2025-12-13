@@ -13,7 +13,7 @@ mod benchmarks {
 
     #[benchmark]
     fn ark_ring_vrf_commit_buffered(x: Linear<RING_SIZE_MIN, RING_SIZE_MAX>) {
-        let members = utils::ring_members_gen(x);
+        let members = utils::ring_members_gen_raw(x);
         let members: BoundedVec<PublicKeyRaw, T::MaxRingSize> = members.try_into().unwrap();
 
         RingKeys::<T>::set(Some(members));
@@ -24,7 +24,7 @@ mod benchmarks {
 
     #[benchmark]
     fn sub_ring_vrf_commit_buffered(x: Linear<RING_SIZE_MIN, RING_SIZE_MAX>) {
-        let members = utils::ring_members_gen(x);
+        let members = utils::ring_members_gen_raw(x);
         let members: BoundedVec<PublicKeyRaw, T::MaxRingSize> = members.try_into().unwrap();
 
         RingKeys::<T>::set(Some(members));
@@ -35,7 +35,7 @@ mod benchmarks {
 
     #[benchmark]
     fn ark_ring_vrf_commit_unbuffered(x: Linear<RING_SIZE_MIN, RING_SIZE_MAX>) {
-        let members = utils::ring_members_gen(x);
+        let members = utils::ring_members_gen_raw(x);
 
         Pallet::<T>::push_members_impl::<ArkSuite>(members);
 
@@ -45,12 +45,35 @@ mod benchmarks {
 
     #[benchmark]
     fn sub_ring_vrf_commit_unbuffered(x: Linear<RING_SIZE_MIN, RING_SIZE_MAX>) {
-        let members = utils::ring_members_gen(x);
-
+        let members = utils::ring_members_gen_raw(x);
         Pallet::<T>::push_members_impl::<ArkSuite>(members);
 
         #[extrinsic_call]
         ring_commit(RawOrigin::None, true);
+    }
+
+    #[benchmark]
+    fn ark_ring_vrf_verify(x: Linear<RING_SIZE_MIN, RING_SIZE_MAX>) {
+        let members = utils::ring_members_gen_raw(x);
+        Pallet::<T>::push_members_impl::<ArkSuite>(members);
+        Pallet::<T>::commit_impl::<ArkSuite>();
+
+        let (input_raw, output_raw, proof_raw) = utils::ring_verify_params_gen(x);
+
+        #[extrinsic_call]
+        ring_verify(RawOrigin::None, input_raw, output_raw, proof_raw, false);
+    }
+
+    #[benchmark]
+    fn sub_ring_vrf_verify(x: Linear<RING_SIZE_MIN, RING_SIZE_MAX>) {
+        let members = utils::ring_members_gen_raw(x);
+        Pallet::<T>::push_members_impl::<ArkSuite>(members);
+        Pallet::<T>::commit_impl::<ArkSuite>();
+
+        let (input_raw, output_raw, proof_raw) = utils::ring_verify_params_gen(x);
+
+        #[extrinsic_call]
+        ring_verify(RawOrigin::None, input_raw, output_raw, proof_raw, true);
     }
 
     #[benchmark]

@@ -15,6 +15,27 @@ fn ietf_verify(optimized: bool) {
     .unwrap();
 }
 
+fn ring_verify(optimized: bool) {
+    ring_commit(optimized);
+
+    let (input_raw, output_raw, proof_raw) = utils::ring_verify_params_gen(MaxRingSize::get());
+    Pallet::<Test>::ring_verify(
+        RuntimeOrigin::none(),
+        input_raw,
+        output_raw,
+        proof_raw,
+        optimized,
+    )
+    .unwrap()
+}
+
+fn ring_commit(optimized: bool) {
+    let origin = RuntimeOrigin::none();
+    let members = utils::ring_members_gen_raw(MaxRingSize::get());
+    Pallet::<Test>::push_members(origin.clone(), members, optimized).unwrap();
+    Pallet::<Test>::ring_commit(origin, optimized).unwrap();
+}
+
 #[test]
 fn ark_ietf_verify() {
     new_test_ext().execute_with(|| ietf_verify(false));
@@ -25,13 +46,6 @@ fn sub_ietf_verify() {
     new_test_ext().execute_with(|| ietf_verify(true))
 }
 
-fn ring_commit(optimized: bool) {
-    let origin = RuntimeOrigin::none();
-    let members = utils::ring_members_gen(MaxRingSize::get());
-    Pallet::<Test>::push_members(origin.clone(), members, optimized).unwrap();
-    Pallet::<Test>::ring_commit(origin, optimized).unwrap();
-}
-
 #[test]
 fn ark_ring_commit() {
     new_test_ext().execute_with(|| ring_commit(false));
@@ -40,4 +54,14 @@ fn ark_ring_commit() {
 #[test]
 fn sub_ring_commit() {
     new_test_ext().execute_with(|| ring_commit(true));
+}
+
+#[test]
+fn ark_ring_verify() {
+    new_test_ext().execute_with(|| ring_verify(false));
+}
+
+#[test]
+fn sub_ring_verify() {
+    new_test_ext().execute_with(|| ring_verify(true));
 }

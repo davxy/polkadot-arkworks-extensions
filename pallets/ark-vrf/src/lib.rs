@@ -77,7 +77,11 @@ type SrsItem = ark_vrf::ring::G1Affine<ark_bandersnatch::BandersnatchSha512Ell2>
 
 const COMPRESSED_POINT_SIZE: usize = 32;
 
-const IETF_SIGNATURE_SERIALIZED_SIZE: usize = 96;
+const IETF_PROOF_SERIALIZED_SIZE: usize = 64;
+
+const RING_PROOF_SERIALIZED_SIZE: usize = 752;
+
+const RING_VERIFIER_KEY_SERIALIZED_SIZE: usize = 384;
 
 const SRS_ITEM_SERIALIZED_SIZE: usize = 48;
 const RING_BUILDER_SERIALIZED_SIZE: usize = 848;
@@ -138,7 +142,35 @@ pub struct RingBuilderRaw(pub [u8; RING_BUILDER_SERIALIZED_SIZE]);
     DecodeWithMemTracking,
     Debug,
 )]
-pub struct IetfSignatureRaw(pub [u8; IETF_SIGNATURE_SERIALIZED_SIZE]);
+pub struct IetfProofRaw(pub [u8; IETF_PROOF_SERIALIZED_SIZE]);
+
+#[derive(
+    Copy,
+    Clone,
+    Eq,
+    PartialEq,
+    MaxEncodedLen,
+    Encode,
+    Decode,
+    TypeInfo,
+    DecodeWithMemTracking,
+    Debug,
+)]
+pub struct RingProofRaw(pub [u8; RING_PROOF_SERIALIZED_SIZE]);
+
+#[derive(
+    Copy,
+    Clone,
+    Eq,
+    PartialEq,
+    MaxEncodedLen,
+    Encode,
+    Decode,
+    TypeInfo,
+    DecodeWithMemTracking,
+    Debug,
+)]
+pub struct RingVerifierKeyRaw(pub [u8; RING_VERIFIER_KEY_SERIALIZED_SIZE]);
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -164,13 +196,19 @@ pub mod pallet {
     }
 
     #[pallet::storage]
+    pub type Srs<T: Config> = StorageMap<_, Twox64Concat, u32, SrsPage>;
+
+    #[pallet::storage]
+    pub type RingSize<T: Config> = StorageValue<_, u32>;
+
+    #[pallet::storage]
     pub type RingBuilder<T> = StorageValue<_, RingBuilderRaw>;
 
     #[pallet::storage]
     pub type RingKeys<T: Config> = StorageValue<_, BoundedVec<PublicKeyRaw, T::MaxRingSize>>;
 
     #[pallet::storage]
-    pub type Srs<T: Config> = StorageMap<_, Twox64Concat, u32, SrsPage>;
+    pub type RingVerifierKey<T: Config> = StorageValue<_, RingVerifierKeyRaw>;
 
     #[pallet::genesis_config]
     pub struct GenesisConfig<T: Config> {
@@ -231,6 +269,7 @@ pub mod pallet {
             new_members: Vec<PublicKeyRaw>,
             optimized: bool,
         ) -> DispatchResult {
+            Self::increment_ring_size(new_members.len() as u32);
             if optimized {
                 Self::push_members_impl::<SubSuite>(new_members);
             } else {
@@ -242,6 +281,7 @@ pub mod pallet {
         #[pallet::call_index(2)]
         #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
         pub fn push_member_buffered(_: OriginFor<T>, member: PublicKeyRaw) -> DispatchResult {
+            Self::increment_ring_size(1);
             let mut members = RingKeys::<T>::get().unwrap_or_default();
             members.try_push(member).expect("Ring is full");
             log::debug!("Pushed new member, current ring size {}", members.len());
@@ -257,15 +297,29 @@ pub mod pallet {
                 Self::push_members(origin, buffered_members.to_vec(), optimized)?;
             }
 
-            // log::debug!("Commit ring with {} members", members.len());
-            // TODO: intermediate function returning the builder
-
             if optimized {
                 Self::commit_impl::<SubSuite>();
             } else {
                 Self::commit_impl::<ArkSuite>();
             }
 
+            Ok(())
+        }
+
+        #[pallet::call_index(4)]
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn ring_verify(
+            _: OriginFor<T>,
+            input_raw: InputRaw,
+            output_raw: OutputRaw,
+            proof_raw: RingProofRaw,
+            optimized: bool,
+        ) -> DispatchResult {
+            if optimized {
+                Self::ring_verify_impl::<SubSuite>(input_raw, output_raw, proof_raw);
+            } else {
+                Self::ring_verify_impl::<ArkSuite>(input_raw, output_raw, proof_raw);
+            }
             Ok(())
         }
 
@@ -280,7 +334,7 @@ pub mod pallet {
             public_raw: PublicKeyRaw,
             input_raw: InputRaw,
             output_raw: OutputRaw,
-            proof_raw: IetfSignatureRaw,
+            proof_raw: IetfProofRaw,
             optimized: bool,
         ) -> DispatchResult {
             if optimized {
@@ -293,11 +347,20 @@ pub mod pallet {
     }
 
     impl<T: Config> Pallet<T> {
+        pub(crate) fn increment_ring_size(new_members_count: u32) {
+            let members_count = RingSize::<T>::get().unwrap_or_default() + new_members_count;
+            if members_count > T::MaxRingSize::get() {
+                panic!("Ring overflow");
+            }
+            log::debug!("Pushing {new_members_count} new member, total ring size {members_count}");
+            RingSize::<T>::set(Some(members_count));
+        }
+
         pub(crate) fn ietf_verify_impl<S: IetfSuite>(
             public_raw: PublicKeyRaw,
             input_raw: InputRaw,
             output_raw: OutputRaw,
-            proof_raw: IetfSignatureRaw,
+            proof_raw: IetfProofRaw,
         ) {
             use ark_vrf::ietf::Verifier;
             let input =
@@ -312,6 +375,37 @@ pub mod pallet {
             public.verify(input, output, &[], &proof).unwrap()
         }
 
+        pub(crate) fn ring_verify_impl<S: RingSuite>(
+            input_raw: InputRaw,
+            output_raw: OutputRaw,
+            proof_raw: RingProofRaw,
+        ) {
+            use ark_vrf::ring::Verifier;
+            let input =
+                ark_vrf::Input::<S>::deserialize_compressed_unchecked(&input_raw.0[..]).unwrap();
+            let output =
+                ark_vrf::Output::<S>::deserialize_compressed_unchecked(&output_raw.0[..]).unwrap();
+            let proof =
+                ark_vrf::ring::Proof::<S>::deserialize_compressed_unchecked(&proof_raw.0[..])
+                    .unwrap();
+
+            let verifier_key_raw = RingVerifierKey::<T>::get().unwrap();
+            let verifier_key =
+                ark_vrf::ring::RingVerifierKey::<S>::deserialize_compressed_unchecked(
+                    &verifier_key_raw.0[..],
+                )
+                .unwrap();
+
+            let ring_size = RingSize::<T>::get().unwrap_or_default();
+            let verifier = ark_vrf::ring::RingProofParams::<S>::verifier_no_context(
+                verifier_key,
+                ring_size as usize,
+            );
+
+            // TODO
+            let _ = ark_vrf::Public::<S>::verify(input, output, &[], &proof, &verifier);
+        }
+
         pub(crate) fn commit_impl<S: RingSuite>() {
             let builder_raw = RingBuilder::<T>::get().unwrap();
             let builder =
@@ -319,7 +413,12 @@ pub mod pallet {
                     &builder_raw.0[..],
                 )
                 .unwrap();
-            let _verifier_key = builder.finalize();
+            let verifier_key = builder.finalize();
+            let mut verifier_key_raw = RingVerifierKeyRaw([0u8; RING_VERIFIER_KEY_SERIALIZED_SIZE]);
+            verifier_key
+                .serialize_compressed(&mut verifier_key_raw.0[..])
+                .unwrap();
+            RingVerifierKey::<T>::set(Some(verifier_key_raw));
         }
 
         pub(crate) fn push_members_impl<S: RingSuite>(new_members: Vec<PublicKeyRaw>) {
@@ -334,7 +433,7 @@ pub mod pallet {
                 .into_iter()
                 .map(|m| {
                     ark_bandersnatch::AffinePoint::deserialize_compressed_unchecked(&m.0[..])
-                        .expect("TODO")
+                        .unwrap()
                 })
                 .collect::<Vec<_>>();
             builder.append(&new_members, lookup).unwrap();
