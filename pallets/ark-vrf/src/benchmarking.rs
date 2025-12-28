@@ -5,7 +5,7 @@ use frame_benchmarking::v2::*;
 use frame_system::RawOrigin;
 
 const RING_SIZE_MIN: u32 = 1;
-const RING_SIZE_MAX: u32 = 10;
+const RING_SIZE_MAX: u32 = 42;
 
 #[benchmarks]
 mod benchmarks {
@@ -55,10 +55,11 @@ mod benchmarks {
     #[benchmark]
     fn ark_ring_vrf_verify(x: Linear<RING_SIZE_MIN, RING_SIZE_MAX>) {
         let members = utils::ring_members_gen_raw(x);
+        let (input_raw, output_raw, proof_raw) =
+            utils::ring_verify_params_gen(T::MaxRingSize::get(), Some(&members));
+
         Pallet::<T>::push_members_impl::<ArkSuite>(members);
         Pallet::<T>::commit_impl::<ArkSuite>();
-
-        let (input_raw, output_raw, proof_raw) = utils::ring_verify_params_gen(x);
 
         #[extrinsic_call]
         ring_verify(RawOrigin::None, input_raw, output_raw, proof_raw, false);
@@ -67,10 +68,11 @@ mod benchmarks {
     #[benchmark]
     fn sub_ring_vrf_verify(x: Linear<RING_SIZE_MIN, RING_SIZE_MAX>) {
         let members = utils::ring_members_gen_raw(x);
+        let (input_raw, output_raw, proof_raw) =
+            utils::ring_verify_params_gen(T::MaxRingSize::get(), Some(&members));
+
         Pallet::<T>::push_members_impl::<ArkSuite>(members);
         Pallet::<T>::commit_impl::<ArkSuite>();
-
-        let (input_raw, output_raw, proof_raw) = utils::ring_verify_params_gen(x);
 
         #[extrinsic_call]
         ring_verify(RawOrigin::None, input_raw, output_raw, proof_raw, true);

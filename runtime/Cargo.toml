@@ -100,3 +100,6 @@ runtime-benchmarks = [
 	"pallet-ark-hostcalls/runtime-benchmarks",
 	"pallet-ark-vrf/runtime-benchmarks",
 ]
+small-ring = [
+	"pallet-ark-vrf/small-ring"
+]

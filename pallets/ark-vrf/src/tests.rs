@@ -1,6 +1,6 @@
 use crate::mock::{MaxRingSize, RuntimeOrigin, Test};
 use crate::{mock::new_test_ext, utils};
-use crate::{Pallet, RingBuilderPcsParams};
+use crate::{Pallet, PublicKeyRaw, RingBuilderPcsParams};
 
 fn ietf_verify(optimized: bool) {
     let (public_raw, input_raw, output_raw, proof_raw) = utils::ietf_verify_params_gen();
@@ -16,9 +16,10 @@ fn ietf_verify(optimized: bool) {
 }
 
 fn ring_verify(optimized: bool) {
-    ring_commit(optimized);
+    let members = ring_commit(optimized);
 
-    let (input_raw, output_raw, proof_raw) = utils::ring_verify_params_gen(MaxRingSize::get());
+    let (input_raw, output_raw, proof_raw) =
+        utils::ring_verify_params_gen(MaxRingSize::get(), Some(&members));
     Pallet::<Test>::ring_verify(
         RuntimeOrigin::none(),
         input_raw,
@@ -29,11 +30,12 @@ fn ring_verify(optimized: bool) {
     .unwrap()
 }
 
-fn ring_commit(optimized: bool) {
+fn ring_commit(optimized: bool) -> Vec<PublicKeyRaw> {
     let origin = RuntimeOrigin::none();
-    let members = utils::ring_members_gen_raw(MaxRingSize::get());
-    Pallet::<Test>::push_members(origin.clone(), members, optimized).unwrap();
+    let members = utils::ring_members_gen_raw(42);
+    Pallet::<Test>::push_members(origin.clone(), members.clone(), optimized).unwrap();
     Pallet::<Test>::ring_commit(origin, optimized).unwrap();
+    members
 }
 
 #[test]

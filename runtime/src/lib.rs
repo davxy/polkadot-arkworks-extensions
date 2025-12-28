@@ -224,7 +224,7 @@ impl pallet_transaction_payment::Config for Runtime {
 impl pallet_ark_hostcalls::Config for Runtime {}
 
 parameter_types! {
-    pub MaxRingSize: u32 = 10;
+    pub MaxRingSize: u32 = pallet_ark_vrf::MAX_RING_SIZE as u32;
 }
 
 impl pallet_ark_vrf::Config for Runtime {

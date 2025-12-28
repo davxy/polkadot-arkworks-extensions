@@ -26,24 +26,23 @@ pub(crate) type ArkSuite = ark_bandersnatch::BandersnatchSha512Ell2;
 pub(crate) type RingBuilderPcsParams =
     ark_vrf::ring::RingBuilderPcsParams<ark_bandersnatch::BandersnatchSha512Ell2>;
 
-const fn max_ring_size_from_pcs_domain_size(pcs_domain_size: usize) -> usize {
-    ark_vrf::ring::max_ring_size_from_pcs_domain_size::<ArkSuite>(pcs_domain_size)
-}
-
 #[cfg(feature = "small-ring")]
 mod ring_params {
     pub const RING_BUILDER_DATA: &[u8] = include_bytes!("static/ring-builder-small.bin");
     pub const RING_BUILDER_PARAMS: &[u8] = include_bytes!("static/ring-builder-params-small.bin");
-    pub const MAX_RING_SIZE: usize = super::max_ring_size_from_pcs_domain_size(1 << 11);
+    pub const MAX_RING_SIZE: usize =
+        ark_vrf::ring::max_ring_size_from_pcs_domain_size::<super::ArkSuite>(1 << 11);
 }
 
 #[cfg(not(feature = "small-ring"))]
 mod ring_params {
     pub const RING_BUILDER_DATA: &[u8] = include_bytes!("static/ring-builder-full.bin");
     pub const RING_BUILDER_PARAMS: &[u8] = include_bytes!("static/ring-builder-params-full.bin");
-    pub const MAX_RING_SIZE: usize = super::max_ring_size_from_pcs_domain_size(1 << 16);
+    pub const MAX_RING_SIZE: usize =
+        ark_vrf::ring::max_ring_size_from_pcs_domain_size::<super::ArkSuite>(1 << 16);
 }
 
+pub use ring_params::MAX_RING_SIZE;
 pub(crate) use ring_params::*;
 
 mod sub_bandersnatch {
@@ -289,7 +288,6 @@ pub mod pallet {
             new_members: Vec<PublicKeyRaw>,
             optimized: bool,
         ) -> DispatchResult {
-            Self::increment_ring_size(new_members.len() as u32);
             if optimized {
                 Self::push_members_impl::<SubSuite>(new_members);
             } else {
@@ -311,18 +309,12 @@ pub mod pallet {
 
         #[pallet::call_index(3)]
         #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
-        pub fn ring_commit(origin: OriginFor<T>, optimized: bool) -> DispatchResult {
-            let buffered_members = RingKeys::<T>::get().unwrap_or_default();
-            if !buffered_members.is_empty() {
-                Self::push_members(origin, buffered_members.to_vec(), optimized)?;
-            }
-
+        pub fn ring_commit(_: OriginFor<T>, optimized: bool) -> DispatchResult {
             if optimized {
                 Self::commit_impl::<SubSuite>();
             } else {
                 Self::commit_impl::<ArkSuite>();
             }
-
             Ok(())
         }
 
@@ -426,6 +418,11 @@ pub mod pallet {
         }
 
         pub(crate) fn commit_impl<S: RingSuite>() {
+            let buffered_members = RingKeys::<T>::get().unwrap_or_default();
+            if !buffered_members.is_empty() {
+                Self::push_members_impl::<S>(buffered_members.to_vec());
+            }
+
             let builder_raw = RingBuilder::<T>::get().unwrap();
             let builder =
                 ark_vrf::ring::RingVerifierKeyBuilder::<S>::deserialize_uncompressed_unchecked(
@@ -441,6 +438,8 @@ pub mod pallet {
         }
 
         pub(crate) fn push_members_impl<S: RingSuite>(new_members: Vec<PublicKeyRaw>) {
+            Self::increment_ring_size(new_members.len() as u32);
+
             let mut builder_raw = RingBuilder::<T>::get().unwrap();
             let mut builder =
                 ark_bandersnatch::RingVerifierKeyBuilder::deserialize_uncompressed_unchecked(
@@ -467,6 +466,7 @@ pub mod pallet {
             builder_raw.copy_from_slice(RING_BUILDER_DATA);
             log::debug!("Reset ring verifier key builder");
             RingBuilder::<T>::set(Some(RingBuilderRaw(builder_raw)));
+            RingSize::<T>::set(Some(0));
         }
 
         // Given a range, returns the list of chunks that maps to the keys at those indices.

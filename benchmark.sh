@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-cargo build --release -p minimal-template-node --features runtime-benchmarks
+cargo build --release -p minimal-template-node --features runtime-benchmarks,small-ring
 
-run="cargo run --release -p minimal-template-node --features runtime-benchmarks -- benchmark pallet"
+run="cargo run --release -p minimal-template-node --features runtime-benchmarks,small-ring -- benchmark pallet"
 
 pallet=$1
 extrinsic=$2
 
-repeat=20
+repeat=3
 steps=50
 
 results_dir="./results"

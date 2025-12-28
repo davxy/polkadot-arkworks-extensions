@@ -35,6 +35,7 @@ pub fn ietf_verify_params_gen() -> (PublicKeyRaw, InputRaw, OutputRaw, IetfProof
 }
 
 pub fn ring_members_gen_raw(ring_size: u32) -> Vec<PublicKeyRaw> {
+    log::debug!("Generate {ring_size} ring items");
     ring_members_gen(ring_size)
         .into_iter()
         .map(|pk| {
@@ -53,7 +54,10 @@ pub fn ring_members_gen(ring_size: u32) -> Vec<ark_bandersnatch::Public> {
 
 pub(crate) const SRS_RAW: &[u8] = include_bytes!("static/srs-uncompressed.bin");
 
-pub fn ring_verify_params_gen(max_ring_size: u32) -> (InputRaw, OutputRaw, RingProofRaw) {
+pub fn ring_verify_params_gen(
+    max_ring_size: u32,
+    members: Option<&[PublicKeyRaw]>,
+) -> (InputRaw, OutputRaw, RingProofRaw) {
     use ark_vrf::ring::Prover;
 
     let secret = ark_bandersnatch::Secret::from_seed(&[0_u8]);
@@ -66,10 +70,14 @@ pub fn ring_verify_params_gen(max_ring_size: u32) -> (InputRaw, OutputRaw, RingP
         ark_bandersnatch::RingProofParams::from_pcs_params(max_ring_size as usize, pcs_params)
             .unwrap();
 
-    let ring_members = ring_members_gen(max_ring_size)
-        .into_iter()
-        .map(|m| m.0)
-        .collect::<Vec<_>>();
+    let ring_members = match members {
+        Some(members) => members
+            .iter()
+            .map(|k| ark_bandersnatch::Public::deserialize_compressed_unchecked(&k.0[..]).unwrap())
+            .collect::<Vec<_>>(),
+        None => ring_members_gen(max_ring_size),
+    };
+    let ring_members = ring_members.into_iter().map(|pk| pk.0).collect::<Vec<_>>();
 
     let prover_key = params.prover_key(&ring_members);
     let prover = params.prover(prover_key, 0);
