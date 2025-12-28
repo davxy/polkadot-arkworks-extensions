@@ -1,6 +1,8 @@
 use crate::mock::{MaxRingSize, RuntimeOrigin, Test};
 use crate::{mock::new_test_ext, utils};
-use crate::{Pallet, PublicKeyRaw, RingBuilderPcsParams};
+use crate::{Pallet, PublicKeyRaw, RingBuilderPcsParams, RING_BUILDER_DATA, RING_BUILDER_PARAMS};
+
+const TEST_RING_SIZE: usize = 42;
 
 fn ietf_verify(optimized: bool) {
     let (public_raw, input_raw, output_raw, proof_raw) = utils::ietf_verify_params_gen();
@@ -32,7 +34,7 @@ fn ring_verify(optimized: bool) {
 
 fn ring_commit(optimized: bool) -> Vec<PublicKeyRaw> {
     let origin = RuntimeOrigin::none();
-    let members = utils::ring_members_gen_raw(42);
+    let members = utils::ring_members_gen_raw(TEST_RING_SIZE);
     Pallet::<Test>::push_members(origin.clone(), members.clone(), optimized).unwrap();
     Pallet::<Test>::ring_commit(origin, optimized).unwrap();
     members
@@ -77,8 +79,7 @@ fn backend_works(pregen_params: bool) {
     let input = ark_bandersnatch::Input::new(b"input").unwrap();
     let output = secret.output(input);
 
-    const RING_SIZE: usize = 10;
-    const _CHECK: usize = crate::MAX_RING_SIZE - RING_SIZE; // Static check for MAX_RING_SIZE >= RING_SIZE
+    const _CHECK: usize = crate::MAX_RING_SIZE - TEST_RING_SIZE; // Static check for MAX_RING_SIZE >= TEST_RING_SIZE
 
     let params = if pregen_params {
         let pcs_params =
@@ -91,7 +92,7 @@ fn backend_works(pregen_params: bool) {
     };
     assert_eq!(params.max_ring_size(), crate::MAX_RING_SIZE);
 
-    let ring_members = utils::ring_members_gen(RING_SIZE as u32)
+    let ring_members = utils::ring_members_gen(TEST_RING_SIZE as u32)
         .into_iter()
         .map(|pk| pk.0)
         .collect::<Vec<_>>();
@@ -124,6 +125,12 @@ fn backend_works(pregen_params: bool) {
     } else {
         params.verifier_key_builder()
     };
+
+    assert_eq!(
+        builder_pcs_params.uncompressed_size(),
+        RING_BUILDER_PARAMS.len()
+    );
+    assert_eq!(builder.uncompressed_size(), RING_BUILDER_DATA.len());
 
     builder.append(&ring_members, &builder_pcs_params).unwrap();
     let verifier_key = builder.finalize();

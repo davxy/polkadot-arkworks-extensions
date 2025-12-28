@@ -249,10 +249,13 @@ pub mod pallet {
     #[pallet::genesis_build]
     impl<T: Config> BuildGenesisConfig for GenesisConfig<T> {
         fn build(&self) {
-            log::info!("Building paged SRS");
             let builder_pcs_params =
                 RingBuilderPcsParams::deserialize_uncompressed_unchecked(RING_BUILDER_PARAMS)
                     .unwrap();
+            log::info!(
+                "Building paged SRS (pages = {})",
+                builder_pcs_params.0.len().div_ceil(SRS_PAGE_SIZE)
+            );
             let mut srs_page = SrsPage::default();
             for (i, item) in builder_pcs_params.0.iter().enumerate() {
                 let page_off = i % SRS_PAGE_SIZE;
@@ -361,10 +364,11 @@ pub mod pallet {
     impl<T: Config> Pallet<T> {
         pub(crate) fn increment_ring_size(new_members_count: u32) {
             let members_count = RingSize::<T>::get().unwrap_or_default() + new_members_count;
-            if members_count > T::MaxRingSize::get() {
-                panic!("Ring overflow");
+            let max_ring_size = T::MaxRingSize::get();
+            if members_count > max_ring_size {
+                panic!("Ring overflow (members = {members_count}, max = {max_ring_size})");
             }
-            log::debug!("Pushing {new_members_count} new member, total ring size {members_count}");
+            log::debug!("Pushing {new_members_count} new members, total ring size {members_count} (max = {max_ring_size})");
             RingSize::<T>::set(Some(members_count));
         }
 
@@ -422,6 +426,8 @@ pub mod pallet {
             if !buffered_members.is_empty() {
                 Self::push_members_impl::<S>(buffered_members.to_vec());
             }
+
+            log::debug!("Committing ring");
 
             let builder_raw = RingBuilder::<T>::get().unwrap();
             let builder =
