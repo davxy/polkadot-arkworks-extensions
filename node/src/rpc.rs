@@ -22,11 +22,11 @@
 
 #![warn(missing_docs)]
 
-use jsonrpsee::RpcModule;
-use minimal_template_runtime::{
+use ark_runtime::{
     interface::{AccountId, Nonce},
     opaque::Block,
 };
+use jsonrpsee::RpcModule;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;

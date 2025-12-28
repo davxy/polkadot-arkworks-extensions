@@ -1,6 +1,6 @@
 [package]
-name = "minimal-template-node"
-description = "A minimal Substrate-based Substrate node, ready for hacking."
+name = "ark-node"
+description = "Node used to test ark related runtime"
 version.workspace = true
 license.workspace = true
 authors.workspace = true

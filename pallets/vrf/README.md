@@ -16,4 +16,10 @@ Time ~=    17190
 
 ### Pure WASM
 
+Time ~=     2182
+              µs
+
 ### Substrate Hostcalls
+
+Time ~=    666.8
+              µs

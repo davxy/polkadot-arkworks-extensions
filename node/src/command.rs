@@ -138,7 +138,7 @@ pub fn run() -> sc_cli::Result<()> {
         }
         Some(Subcommand::ChainInfo(cmd)) => {
             let runner = cli.create_runner(cmd)?;
-            runner.sync_run(|config| cmd.run::<minimal_template_runtime::opaque::Block>(&config))
+            runner.sync_run(|config| cmd.run::<ark_runtime::opaque::Block>(&config))
         }
         Some(Subcommand::Benchmark(cmd)) => {
             let runner = cli.create_runner(cmd)?;
@@ -155,7 +155,7 @@ pub fn run() -> sc_cli::Result<()> {
                             );
                         }
                         cmd.run_with_spec::<
-                            sp_runtime::traits::HashingFor<minimal_template_runtime::interface::Block>,
+                            sp_runtime::traits::HashingFor<ark_runtime::interface::Block>,
                             CryptoHostcalls
                         >(Some(config.chain_spec))
                     }

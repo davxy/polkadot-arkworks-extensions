@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-cargo build --release -p minimal-template-node --features runtime-benchmarks,small-ring
+cargo build --release -p ark-node --features runtime-benchmarks,small-ring
 
-run="cargo run --release -p minimal-template-node --features runtime-benchmarks,small-ring -- benchmark pallet"
+run="cargo run --release -p ark-node --features runtime-benchmarks,small-ring -- benchmark pallet"
 
 pallet=$1
 extrinsic=$2

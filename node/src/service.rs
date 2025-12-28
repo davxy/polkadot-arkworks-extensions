@@ -17,7 +17,7 @@
 
 use crate::cli::Consensus;
 use futures::FutureExt;
-use minimal_template_runtime::{opaque::Block, RuntimeApi};
+use ark_runtime::{opaque::Block, RuntimeApi};
 use sc_client_api::backend::Backend;
 use sc_consensus_manual_seal;
 use sc_executor::WasmExecutor;
