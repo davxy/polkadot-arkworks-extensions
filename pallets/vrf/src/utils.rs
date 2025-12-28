@@ -24,7 +24,7 @@ pub fn ietf_verify_params_gen() -> (PublicKeyRaw, InputRaw, OutputRaw, IetfProof
     let public = secret.public();
     let input = ark_bandersnatch::Input::new(b"input").unwrap();
     let output = secret.output(input);
-    let proof = secret.prove(input, output, &[]);
+    let proof = secret.prove(input, output, []);
 
     (
         CompressedPoint(public.get_raw()),

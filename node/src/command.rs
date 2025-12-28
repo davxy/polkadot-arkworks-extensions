@@ -160,7 +160,7 @@ pub fn run() -> sc_cli::Result<()> {
                         >(Some(config.chain_spec))
                     }
                     _ => {
-                        return Err("Runtime benchmarking wasn't supported for {cmd:?}".into());
+                        Err("Runtime benchmarking wasn't supported for {cmd:?}".into())
                     }
                 }
             })

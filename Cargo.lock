@@ -6297,6 +6297,7 @@ dependencies = [
  "scale-info",
  "sp-crypto-ec-utils",
  "sp-io",
+ "sp-tracing",
 ]
 
 [[package]]

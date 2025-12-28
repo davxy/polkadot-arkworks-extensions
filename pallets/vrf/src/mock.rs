@@ -1,6 +1,4 @@
 use frame_support::{self, derive_impl, parameter_types, sp_runtime::BuildStorage};
-use frame_system;
-use sp_io;
 
 type Block = frame_system::mocking::MockBlock<Test>;
 
@@ -36,7 +34,7 @@ impl frame_system::Config for Test {
 }
 
 parameter_types! {
-    pub MaxRingSize: u32 = crate::MAX_RING_SIZE as u32;
+    pub MaxRingSize: u32 = crate::MAX_RING_SIZE;
 }
 
 impl crate::Config for Test {
@@ -45,7 +43,7 @@ impl crate::Config for Test {
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-    let _ = sp_tracing::try_init_simple();
+    sp_tracing::try_init_simple();
 
     let mut storage = frame_system::GenesisConfig::<Test>::default()
         .build_storage()

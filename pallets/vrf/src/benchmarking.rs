@@ -1,5 +1,8 @@
 use super::*;
 
+#[allow(unused)]
+use crate::Pallet as ArkVrf;
+
 use crate::utils;
 use frame_benchmarking::v2::*;
 use frame_system::RawOrigin;

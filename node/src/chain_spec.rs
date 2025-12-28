@@ -17,7 +17,6 @@
 
 use ark_runtime::WASM_BINARY;
 use sc_service::{ChainType, Properties};
-use sp_genesis_builder;
 
 /// This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec;

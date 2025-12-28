@@ -16,7 +16,6 @@ mod benchmarking;
 mod utils;
 
 use frame_support::pallet_prelude::*;
-use log;
 
 use ark_vrf::reexports::ark_std::vec::Vec;
 
@@ -94,8 +93,6 @@ pub use pallet::*;
 const DEFAULT_WEIGHT: u64 = 10_000;
 
 const SRS_PAGE_SIZE: usize = 1 << 3;
-
-type SrsItem = ark_vrf::ring::G1Affine<ark_bandersnatch::BandersnatchSha512Ell2>;
 
 const COMPRESSED_POINT_SIZE: usize = 32;
 
@@ -388,7 +385,7 @@ pub mod pallet {
             let proof =
                 ark_vrf::ietf::Proof::<S>::deserialize_compressed_unchecked(&proof_raw.0[..])
                     .unwrap();
-            public.verify(input, output, &[], &proof).unwrap();
+            public.verify(input, output, [], &proof).unwrap();
         }
 
         pub(crate) fn ring_verify_impl<S: RingSuite>(
@@ -418,7 +415,7 @@ pub mod pallet {
                 max_ring_size as usize,
             );
 
-            ark_vrf::Public::<S>::verify(input, output, &[], &proof, &verifier).unwrap();
+            ark_vrf::Public::<S>::verify(input, output, [], &proof, &verifier).unwrap();
         }
 
         pub(crate) fn commit_impl<S: RingSuite>() {
@@ -448,7 +445,7 @@ pub mod pallet {
 
             let mut builder_raw = RingBuilder::<T>::get().unwrap();
             let mut builder =
-                ark_bandersnatch::RingVerifierKeyBuilder::deserialize_uncompressed_unchecked(
+                ark_vrf::ring::RingVerifierKeyBuilder::<S>::deserialize_uncompressed_unchecked(
                     &builder_raw.0[..],
                 )
                 .unwrap();
@@ -456,11 +453,12 @@ pub mod pallet {
                 .into_iter()
                 .map(|m| {
                     log::trace!("Pushing {:02x?}", m.0);
-                    ark_bandersnatch::AffinePoint::deserialize_compressed_unchecked(&m.0[..])
-                        .unwrap()
+                    ark_vrf::AffinePoint::<S>::deserialize_compressed_unchecked(&m.0[..]).unwrap()
                 })
                 .collect::<Vec<_>>();
-            builder.append(&new_members, Self::fetch_srs_range).unwrap();
+            builder
+                .append(&new_members, Self::fetch_srs_range::<S>)
+                .unwrap();
             builder
                 .serialize_uncompressed(&mut builder_raw.0[..])
                 .unwrap();
@@ -476,7 +474,9 @@ pub mod pallet {
         }
 
         // Given a range, returns the list of chunks that maps to the keys at those indices.
-        pub(crate) fn fetch_srs_range(range: Range<usize>) -> Option<Vec<SrsItem>> {
+        pub(crate) fn fetch_srs_range<S: RingSuite>(
+            range: Range<usize>,
+        ) -> Option<Vec<ark_vrf::ring::G1Affine<S>>> {
             log::debug!("SRS lookup {range:?}");
 
             let start_page = range.start / SRS_PAGE_SIZE;
@@ -490,7 +490,9 @@ pub mod pallet {
                     })
                     .skip(range.start % SRS_PAGE_SIZE)
                     .take(range.end - range.start)
-                    .map(|data| SrsItem::deserialize_compressed(&data.0[..]).unwrap())
+                    .map(|data| {
+                        ark_vrf::ring::G1Affine::<S>::deserialize_compressed(&data.0[..]).unwrap()
+                    })
                     .collect(),
             )
         }

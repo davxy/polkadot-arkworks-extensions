@@ -30,6 +30,7 @@ ark-ed-on-bls12-381-bandersnatch = { version = "0.5.0", default-features = false
 
 [dev-dependencies]
 sp-io = { workspace = true }
+sp-tracing = { workspace = true, default-features = true }
 
 [features]
 default = ["std"]

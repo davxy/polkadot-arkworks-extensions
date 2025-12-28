@@ -19,7 +19,6 @@ use crate::cli::Consensus;
 use futures::FutureExt;
 use ark_runtime::{opaque::Block, RuntimeApi};
 use sc_client_api::backend::Backend;
-use sc_consensus_manual_seal;
 use sc_executor::WasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
