@@ -21,6 +21,12 @@ const MSM_LEN_MAX: u32 = 100;
 mod benchmarks {
     use super::*;
 
+    // ---------------------------------------------
+    // Calls for ed-on-bls12-381-bandersnatch
+    // ---------------------------------------------
+
+    // Short Weierstrass
+
     #[benchmark]
     fn ark_ed_on_bls12_381_bandersnatch_msm_sw(x: Linear<MSM_LEN_MIN, MSM_LEN_MAX>) {
         let (bases, scalars) =
@@ -49,6 +55,64 @@ mod benchmarks {
     }
 
     #[benchmark]
+    fn ark_ed_on_bls12_381_bandersnatch_mul_projective_sw() {
+        let (base, scalar) =
+            utils::make_mul_projective_args::<ark_ed_on_bls12_381_bandersnatch::SWProjective>();
+
+        #[extrinsic_call]
+        ed_on_bls12_381_bandersnatch_mul_projective_sw(
+            RawOrigin::Signed(whitelisted_caller()),
+            base.encode(),
+            scalar.encode(),
+            false,
+        );
+    }
+
+    #[benchmark]
+    fn sub_ed_on_bls12_381_bandersnatch_mul_projective_sw() {
+        let (base, scalar) =
+            utils::make_mul_projective_args::<ark_ed_on_bls12_381_bandersnatch::SWProjective>();
+
+        #[extrinsic_call]
+        ed_on_bls12_381_bandersnatch_mul_projective_sw(
+            RawOrigin::Signed(whitelisted_caller()),
+            base.encode(),
+            scalar.encode(),
+            true,
+        );
+    }
+
+    #[benchmark]
+    fn ark_ed_on_bls12_381_bandersnatch_mul_affine_sw() {
+        let (base, scalar) =
+            utils::make_mul_affine_args::<ark_ed_on_bls12_381_bandersnatch::SWAffine>();
+
+        #[extrinsic_call]
+        ed_on_bls12_381_bandersnatch_mul_affine_sw(
+            RawOrigin::Signed(whitelisted_caller()),
+            base.encode(),
+            scalar.encode(),
+            false,
+        );
+    }
+
+    #[benchmark]
+    fn sub_ed_on_bls12_381_bandersnatch_mul_affine_sw() {
+        let (base, scalar) =
+            utils::make_mul_affine_args::<ark_ed_on_bls12_381_bandersnatch::SWAffine>();
+
+        #[extrinsic_call]
+        ed_on_bls12_381_bandersnatch_mul_affine_sw(
+            RawOrigin::Signed(whitelisted_caller()),
+            base.encode(),
+            scalar.encode(),
+            true,
+        );
+    }
+
+    // Twisted Edwards
+
+    #[benchmark]
     fn ark_ed_on_bls12_381_bandersnatch_msm_te(x: Linear<MSM_LEN_MIN, MSM_LEN_MAX>) {
         let (bases, scalars) =
             utils::make_msm_args::<ark_ed_on_bls12_381_bandersnatch::EdwardsProjective>(x);
@@ -74,135 +138,63 @@ mod benchmarks {
         );
     }
 
-    // #[benchmark]
-    // fn ark_ed_on_bls12_381_bandersnatch_mul_projective_sw() {
-    //     use crate::utils;
-    //     use codec::Encode;
+    #[benchmark]
+    fn ark_ed_on_bls12_381_bandersnatch_mul_projective_te() {
+        let (base, scalar) = utils::make_mul_projective_args::<
+            ark_ed_on_bls12_381_bandersnatch::EdwardsProjective,
+        >();
 
-    //     let (base, scalar) =
-    //         utils::make_mul_projective_args::<ark_ed_on_bls12_381_bandersnatch::SWProjective>();
+        #[extrinsic_call]
+        ed_on_bls12_381_bandersnatch_mul_projective_te(
+            RawOrigin::Signed(whitelisted_caller()),
+            base.encode(),
+            scalar.encode(),
+            false,
+        );
+    }
 
-    //     #[extrinsic_call]
-    //     _(
-    //         RawOrigin::Signed(whitelisted_caller()),
-    //         base.encode(),
-    //         scalar.encode(),
-    //     );
-    // }
+    #[benchmark]
+    fn sub_ed_on_bls12_381_bandersnatch_mul_projective_te() {
+        let (base, scalar) = utils::make_mul_projective_args::<
+            ark_ed_on_bls12_381_bandersnatch::EdwardsProjective,
+        >();
 
-    // #[benchmark]
-    // fn sub_ed_on_bls12_381_bandersnatch_mul_projective_sw() {
-    //     use crate::utils;
-    //     use codec::Encode;
+        #[extrinsic_call]
+        ed_on_bls12_381_bandersnatch_mul_projective_te(
+            RawOrigin::Signed(whitelisted_caller()),
+            base.encode(),
+            scalar.encode(),
+            true,
+        );
+    }
 
-    //     let (base, scalar) =
-    //         utils::make_mul_projective_args::<sub_ed_on_bls12_381_bandersnatch::SWProjective>();
+    #[benchmark]
+    fn ark_ed_on_bls12_381_bandersnatch_mul_affine_te() {
+        let (base, scalar) =
+            utils::make_mul_affine_args::<ark_ed_on_bls12_381_bandersnatch::EdwardsAffine>();
 
-    //     #[extrinsic_call]
-    //     _(
-    //         RawOrigin::Signed(whitelisted_caller()),
-    //         base.encode(),
-    //         scalar.encode(),
-    //     );
-    // }
+        #[extrinsic_call]
+        ed_on_bls12_381_bandersnatch_mul_affine_te(
+            RawOrigin::Signed(whitelisted_caller()),
+            base.encode(),
+            scalar.encode(),
+            false,
+        );
+    }
 
-    // #[benchmark]
-    // fn ark_ed_on_bls12_381_bandersnatch_mul_projective_te() {
-    //     use crate::utils;
-    //     use codec::Encode;
+    #[benchmark]
+    fn sub_ed_on_bls12_381_bandersnatch_mul_affine_te() {
+        let (base, scalar) =
+            utils::make_mul_affine_args::<ark_ed_on_bls12_381_bandersnatch::EdwardsAffine>();
 
-    //     let (base, scalar) = utils::make_mul_projective_args::<
-    //         ark_ed_on_bls12_381_bandersnatch::EdwardsProjective,
-    //     >();
-
-    //     #[extrinsic_call]
-    //     _(
-    //         RawOrigin::Signed(whitelisted_caller()),
-    //         base.encode(),
-    //         scalar.encode(),
-    //     );
-    // }
-
-    // #[benchmark]
-    // fn sub_ed_on_bls12_381_bandersnatch_mul_projective_te() {
-    //     use crate::utils;
-    //     use codec::Encode;
-
-    //     let (base, scalar) = utils::make_mul_projective_args::<
-    //         sub_ed_on_bls12_381_bandersnatch::EdwardsProjective,
-    //     >();
-
-    //     #[extrinsic_call]
-    //     _(
-    //         RawOrigin::Signed(whitelisted_caller()),
-    //         base.encode(),
-    //         scalar.encode(),
-    //     );
-    // }
-
-    // #[benchmark]
-    // fn ark_ed_on_bls12_381_bandersnatch_mul_affine_sw() {
-    //     use crate::utils;
-    //     use codec::Encode;
-
-    //     let (base, scalar) =
-    //         utils::make_mul_affine_args::<ark_ed_on_bls12_381_bandersnatch::SWAffine>();
-
-    //     #[extrinsic_call]
-    //     _(
-    //         RawOrigin::Signed(whitelisted_caller()),
-    //         base.encode(),
-    //         scalar.encode(),
-    //     );
-    // }
-
-    // #[benchmark]
-    // fn sub_ed_on_bls12_381_bandersnatch_mul_affine_sw() {
-    //     use crate::utils;
-    //     use codec::Encode;
-
-    //     let (base, scalar) =
-    //         utils::make_mul_affine_args::<sub_ed_on_bls12_381_bandersnatch::SWAffine>();
-
-    //     #[extrinsic_call]
-    //     _(
-    //         RawOrigin::Signed(whitelisted_caller()),
-    //         base.encode(),
-    //         scalar.encode(),
-    //     );
-    // }
-
-    // #[benchmark]
-    // fn ark_ed_on_bls12_381_bandersnatch_mul_affine_te() {
-    //     use crate::utils;
-    //     use codec::Encode;
-
-    //     let (base, scalar) =
-    //         utils::make_mul_affine_args::<ark_ed_on_bls12_381_bandersnatch::EdwardsAffine>();
-
-    //     #[extrinsic_call]
-    //     _(
-    //         RawOrigin::Signed(whitelisted_caller()),
-    //         base.encode(),
-    //         scalar.encode(),
-    //     );
-    // }
-
-    // #[benchmark]
-    // fn sub_ed_on_bls12_381_bandersnatch_mul_affine_te() {
-    //     use crate::utils;
-    //     use codec::Encode;
-
-    //     let (base, scalar) =
-    //         utils::make_mul_affine_args::<sub_ed_on_bls12_381_bandersnatch::EdwardsAffine>();
-
-    //     #[extrinsic_call]
-    //     _(
-    //         RawOrigin::Signed(whitelisted_caller()),
-    //         base.encode(),
-    //         scalar.encode(),
-    //     );
-    // }
+        #[extrinsic_call]
+        ed_on_bls12_381_bandersnatch_mul_affine_te(
+            RawOrigin::Signed(whitelisted_caller()),
+            base.encode(),
+            scalar.encode(),
+            true,
+        );
+    }
 
     impl_benchmark_test_suite!(ArkHostcalls, crate::mock::new_test_ext(), crate::mock::Test);
 }

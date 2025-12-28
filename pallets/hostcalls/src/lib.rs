@@ -97,7 +97,7 @@ pub mod pallet {
 
         // Short Weierstrass
 
-        #[pallet::call_index(44)]
+        #[pallet::call_index(1)]
         #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
         pub fn ed_on_bls12_381_bandersnatch_msm_sw(
             _: OriginFor<T>,
@@ -117,7 +117,7 @@ pub mod pallet {
             Ok(())
         }
 
-        #[pallet::call_index(48)]
+        #[pallet::call_index(2)]
         #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
         pub fn ed_on_bls12_381_bandersnatch_mul_projective_sw(
             _: OriginFor<T>,
@@ -137,7 +137,7 @@ pub mod pallet {
             Ok(())
         }
 
-        #[pallet::call_index(52)]
+        #[pallet::call_index(3)]
         #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
         pub fn ed_on_bls12_381_bandersnatch_mul_affine_sw(
             _: OriginFor<T>,
@@ -159,7 +159,7 @@ pub mod pallet {
 
         // Twisted Edwards
 
-        #[pallet::call_index(46)]
+        #[pallet::call_index(4)]
         #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
         pub fn ed_on_bls12_381_bandersnatch_msm_te(
             _origin: OriginFor<T>,
@@ -179,7 +179,7 @@ pub mod pallet {
             Ok(())
         }
 
-        #[pallet::call_index(51)]
+        #[pallet::call_index(5)]
         #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
         pub fn ed_on_bls12_381_bandersnatch_mul_projective_te(
             _: OriginFor<T>,
@@ -199,7 +199,7 @@ pub mod pallet {
             Ok(())
         }
 
-        #[pallet::call_index(54)]
+        #[pallet::call_index(6)]
         #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
         pub fn ed_on_bls12_381_bandersnatch_mul_affine_te(
             _: OriginFor<T>,

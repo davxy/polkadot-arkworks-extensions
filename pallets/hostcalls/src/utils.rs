@@ -70,21 +70,6 @@ pub fn serialize_argument(argument: impl CanonicalSerialize) -> Vec<u8> {
     buf
 }
 
-// pub fn make_msm_args_te<Group: ark_ec::VariableBaseMSM + ark_ec::CurveGroup>(
-//     size: u32,
-// ) -> (ArkScale<Vec<<Group as ark_ec::CurveGroup>::Affine>>, ArkScale<Vec<Group::ScalarField>>) {
-//     let rng = &mut test_rng();
-//     let scalars = (0..size)
-//         .map(|_| Group::ScalarField::rand(rng))
-//         .collect::<Vec<_>>();
-//     let bases = (0..size)
-//         .map(|_| Group::rand(rng).into_affine())
-//         .collect::<Vec<_>>();
-//     let bases: ArkScale<Vec<<Group as ark_ec::CurveGroup>::Affine>> = bases.into();
-//     let scalars: ArkScale<Vec<Group::ScalarField>> = scalars.into();
-//     (bases, scalars)
-// }
-
 pub fn make_mul_projective_args<Group: UniformRand>(
 ) -> (ArkScaleProjective<Group>, ArkScale<Vec<u64>>) {
     (make_base::<Group>().into(), make_scalar(4).into())
