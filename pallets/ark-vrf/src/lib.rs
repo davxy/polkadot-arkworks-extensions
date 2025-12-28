@@ -408,10 +408,10 @@ pub mod pallet {
                 )
                 .unwrap();
 
-            let ring_size = RingSize::<T>::get().unwrap_or_default();
+            let max_ring_size = T::MaxRingSize::get();
             let verifier = ark_vrf::ring::RingProofParams::<S>::verifier_no_context(
                 verifier_key,
-                ring_size as usize,
+                max_ring_size as usize,
             );
 
             ark_vrf::Public::<S>::verify(input, output, &[], &proof, &verifier).unwrap();
