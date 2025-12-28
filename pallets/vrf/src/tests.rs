@@ -21,7 +21,7 @@ fn ring_verify(optimized: bool) {
     let members = ring_commit(optimized);
 
     let (input_raw, output_raw, proof_raw) =
-        utils::ring_verify_params_gen(MaxRingSize::get(), Some(&members));
+        utils::ring_verify_params_gen(MaxRingSize::get() as usize, Some(&members));
     Pallet::<Test>::ring_verify(
         RuntimeOrigin::none(),
         input_raw,
@@ -92,7 +92,7 @@ fn backend_works(pregen_params: bool) {
     };
     assert_eq!(params.max_ring_size(), crate::MAX_RING_SIZE);
 
-    let ring_members = utils::ring_members_gen(TEST_RING_SIZE as u32)
+    let ring_members = utils::ring_members_gen(TEST_RING_SIZE)
         .into_iter()
         .map(|pk| pk.0)
         .collect::<Vec<_>>();

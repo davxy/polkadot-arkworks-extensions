@@ -47,9 +47,9 @@ pallet-transaction-payment-rpc-runtime-api = { workspace = true }
 frame-benchmarking = { optional = true, workspace = true }
 frame-system-benchmarking = { optional = true, workspace = true }
 
-# local pallet templates
+# Local pallets
 pallet-ark-hostcalls = { path = "../pallets/hostcalls", default-features = false }
-pallet-ark-vrf = { path = "../pallets/ark-vrf", default-features = false }
+pallet-ark-vrf = { path = "../pallets/vrf", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { optional = true, workspace = true, default-features = true }
