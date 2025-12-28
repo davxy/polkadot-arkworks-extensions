@@ -9,7 +9,7 @@ Time ~=    30130
 ### Substrate Hostcalls
 
 Time ~=    17190
-    + x        0
+    + x    14.58
               µs
 
 ## IETF VRF Verification

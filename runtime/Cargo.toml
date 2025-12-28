@@ -21,7 +21,6 @@ frame-system = { workspace = true }
 
 # frame pallets
 pallet-balances = { workspace = true }
-pallet-sudo = { workspace = true }
 pallet-timestamp = { workspace = true }
 pallet-transaction-payment = { workspace = true }
 
@@ -67,7 +66,6 @@ std = [
 	"pallet-balances/std",
 	"pallet-ark-hostcalls/std",
 	"pallet-ark-vrf/std",
-	"pallet-sudo/std",
 	"pallet-timestamp/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
 	"pallet-transaction-payment/std",
@@ -94,7 +92,6 @@ runtime-benchmarks = [
 	"frame-system/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
 	"pallet-balances/runtime-benchmarks",
-	"pallet-sudo/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
 	"pallet-transaction-payment/runtime-benchmarks",
 	"pallet-ark-hostcalls/runtime-benchmarks",

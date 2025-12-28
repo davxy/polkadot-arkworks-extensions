@@ -27,7 +27,6 @@ sp-crypto-ec-utils = { workspace = true }
 ark-vrf = { version = "0.1.1", default-features = false, features = ["bandersnatch", "ring", "asm"] }
 
 [dev-dependencies]
-sp-core = { workspace = true, default-features = true }
 sp-io = { workspace = true, default-features = true }
 sp-runtime = { workspace = true, default-features = true }
 sp-tracing = { workspace = true, default-features = true }

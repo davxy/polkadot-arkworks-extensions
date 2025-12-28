@@ -47,7 +47,7 @@ use sp_version::RuntimeVersion;
 /// Provides getters for genesis configuration presets.
 pub mod genesis_config_presets {
     use super::*;
-    use crate::{interface::Balance, BalancesConfig, RuntimeGenesisConfig, SudoConfig};
+    use crate::{interface::Balance, BalancesConfig, RuntimeGenesisConfig};
 
     use alloc::{vec, vec::Vec};
     use serde_json::Value;
@@ -62,9 +62,6 @@ pub mod genesis_config_presets {
                 balances: Sr25519Keyring::iter()
                     .map(|a| (a.to_account_id(), endowment))
                     .collect::<Vec<_>>(),
-            },
-            sudo: SudoConfig {
-                key: Some(Sr25519Keyring::Alice.to_account_id())
             },
         })
     }
@@ -167,10 +164,6 @@ mod runtime {
     #[runtime::pallet_index(2)]
     pub type Balances = pallet_balances;
 
-    /// Provides a way to execute privileged functions.
-    #[runtime::pallet_index(3)]
-    pub type Sudo = pallet_sudo;
-
     /// Provides the ability to charge for extrinsic execution.
     #[runtime::pallet_index(4)]
     pub type TransactionPayment = pallet_transaction_payment;
@@ -203,11 +196,6 @@ impl pallet_balances::Config for Runtime {
     type AccountStore = System;
 }
 
-// Implements the types required for the sudo pallet.
-#[derive_impl(pallet_sudo::config_preludes::TestDefaultConfig)]
-impl pallet_sudo::Config for Runtime {}
-
-// Implements the types required for the sudo pallet.
 #[derive_impl(pallet_timestamp::config_preludes::TestDefaultConfig)]
 impl pallet_timestamp::Config for Runtime {}
 
@@ -275,7 +263,6 @@ frame_benchmarking::define_benchmarks!(
     [frame_system, SystemBench::<Runtime>]
     [pallet_balances, Balances]
     [pallet_timestamp, Timestamp]
-    [pallet_sudo, Sudo]
     [pallet_ark_hostcalls, ArkHostcalls]
     [pallet_ark_vrf, ArkVrf]
 );

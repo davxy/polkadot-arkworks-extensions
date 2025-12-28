@@ -577,7 +577,6 @@ dependencies = [
  "pallet-ark-hostcalls",
  "pallet-ark-vrf",
  "pallet-balances",
- "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
@@ -6311,7 +6310,6 @@ dependencies = [
  "log",
  "parity-scale-codec",
  "scale-info",
- "sp-core",
  "sp-crypto-ec-utils",
  "sp-io",
  "sp-runtime",
@@ -6494,21 +6492,6 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-staking",
-]
-
-[[package]]
-name = "pallet-sudo"
-version = "28.0.0"
-source = "git+https://github.com/paritytech/polkadot-sdk#68c1250bbc3b28cfdec1e6effbaa91d9a8999b3d"
-dependencies = [
- "docify",
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-io",
- "sp-runtime",
 ]
 
 [[package]]
