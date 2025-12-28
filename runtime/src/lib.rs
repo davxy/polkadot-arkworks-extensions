@@ -165,15 +165,15 @@ mod runtime {
     pub type Balances = pallet_balances;
 
     /// Provides the ability to charge for extrinsic execution.
-    #[runtime::pallet_index(4)]
+    #[runtime::pallet_index(3)]
     pub type TransactionPayment = pallet_transaction_payment;
 
     /// Arkworks hostcalls.
-    #[runtime::pallet_index(5)]
+    #[runtime::pallet_index(4)]
     pub type ArkHostcalls = pallet_ark_hostcalls;
 
     /// Arkworks VRF.
-    #[runtime::pallet_index(6)]
+    #[runtime::pallet_index(5)]
     pub type ArkVrf = pallet_ark_vrf;
 }
 
