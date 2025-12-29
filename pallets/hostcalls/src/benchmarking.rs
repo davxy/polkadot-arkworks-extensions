@@ -33,6 +33,110 @@ mod benchmarks {
         bls12_381_pairing(RawOrigin::None, a.encode(), b.encode(), false);
     }
 
+    #[benchmark]
+    fn sub_bls12_381_pairing() {
+        let (a, b) = utils::make_pairing_args::<sub_bls12_381::G1Affine, sub_bls12_381::G2Affine>();
+
+        #[extrinsic_call]
+        bls12_381_pairing(RawOrigin::None, a.encode(), b.encode(), true);
+    }
+
+    #[benchmark]
+    fn ark_bls12_381_msm_g1(x: Linear<MSM_LEN_MIN, MSM_LEN_MAX>) {
+        let (bases, scalars) = utils::make_msm_args::<ark_bls12_381::G1Projective>(x);
+
+        #[extrinsic_call]
+        bls12_381_msm_g1(RawOrigin::None, bases.encode(), scalars.encode(), false);
+    }
+
+    #[benchmark]
+    fn sub_bls12_381_msm_g1(x: Linear<MSM_LEN_MIN, MSM_LEN_MAX>) {
+        let (bases, scalars) = utils::make_msm_args::<ark_bls12_381::G1Projective>(x);
+
+        #[extrinsic_call]
+        bls12_381_msm_g1(RawOrigin::None, bases.encode(), scalars.encode(), true);
+    }
+
+    #[benchmark]
+    fn ark_bls12_381_mul_projective_g1() {
+        let (base, scalar) = utils::make_mul_projective_args::<ark_bls12_381::G1Projective>();
+
+        #[extrinsic_call]
+        bls12_381_mul_projective_g1(RawOrigin::None, base.encode(), scalar.encode(), false);
+    }
+
+    #[benchmark]
+    fn sub_bls12_381_mul_projective_g1() {
+        let (base, scalar) = utils::make_mul_projective_args::<ark_bls12_381::G1Projective>();
+
+        #[extrinsic_call]
+        bls12_381_mul_projective_g1(RawOrigin::None, base.encode(), scalar.encode(), true);
+    }
+
+    #[benchmark]
+    fn ark_bls12_381_mul_affine_g1() {
+        let (base, scalar) = utils::make_mul_affine_args::<bls12_381::G1Affine>();
+
+        #[extrinsic_call]
+        bls12_381_mul_affine_g1(RawOrigin::None, base.encode(), scalar.encode(), false);
+    }
+
+    #[benchmark]
+    fn sub_bls12_381_mul_affine_g1() {
+        let (base, scalar) = utils::make_mul_affine_args::<ark_bls12_381::G1Affine>();
+
+        #[extrinsic_call]
+        bls12_381_mul_affine_g1(RawOrigin::None, base.encode(), scalar.encode(), false);
+    }
+
+    #[benchmark]
+    fn ark_bls12_381_msm_g2(x: Linear<MSM_LEN_MIN, MSM_LEN_MAX>) {
+        let (bases, scalars) = utils::make_msm_args::<ark_bls12_381::G2Projective>(x);
+
+        #[extrinsic_call]
+        bls12_381_msm_g2(RawOrigin::None, bases.encode(), scalars.encode(), false);
+    }
+
+    #[benchmark]
+    fn sub_bls12_381_msm_g2(x: Linear<MSM_LEN_MIN, MSM_LEN_MAX>) {
+        let (bases, scalars) = utils::make_msm_args::<ark_bls12_381::G2Projective>(x);
+
+        #[extrinsic_call]
+        bls12_381_msm_g2(RawOrigin::None, bases.encode(), scalars.encode(), true);
+    }
+
+    #[benchmark]
+    fn ark_bls12_381_mul_projective_g2() {
+        let (base, scalar) = utils::make_mul_projective_args::<ark_bls12_381::G2Projective>();
+
+        #[extrinsic_call]
+        bls12_381_mul_projective_g2(RawOrigin::None, base.encode(), scalar.encode(), false);
+    }
+
+    #[benchmark]
+    fn sub_bls12_381_mul_projective_g2() {
+        let (base, scalar) = utils::make_mul_projective_args::<ark_bls12_381::G2Projective>();
+
+        #[extrinsic_call]
+        bls12_381_mul_projective_g2(RawOrigin::None, base.encode(), scalar.encode(), true);
+    }
+
+    #[benchmark]
+    fn ark_bls12_381_mul_affine_g2() {
+        let (base, scalar) = utils::make_mul_affine_args::<bls12_381::G2Affine>();
+
+        #[extrinsic_call]
+        bls12_381_mul_affine_g2(RawOrigin::None, base.encode(), scalar.encode(), false);
+    }
+
+    #[benchmark]
+    fn sub_bls12_381_mul_affine_g2() {
+        let (base, scalar) = utils::make_mul_affine_args::<ark_bls12_381::G2Affine>();
+
+        #[extrinsic_call]
+        bls12_381_mul_affine_g2(RawOrigin::None, base.encode(), scalar.encode(), false);
+    }
+
     // ---------------------------------------------
     // Calls for ed-on-bls12-377
     // ---------------------------------------------

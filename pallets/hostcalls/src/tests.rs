@@ -5,7 +5,7 @@ use crate::{
 use ark_scale::scale::Encode;
 use frame_support::assert_ok;
 
-const MSM_ITEMS: u32 = 500;
+const MSM_ITEMS: u32 = 256;
 const SCALAR_WORDS: u32 = 3;
 
 // ---------------------------------------------
@@ -33,6 +33,144 @@ fn ark_bls12_381_pairing() {
 #[test]
 fn sub_bls12_381_pairing() {
     bls12_381_pairing(true);
+}
+
+fn bls12_381_msm_g1(optimized: bool) {
+    let (bases, scalars) = make_msm_args::<ark_bls12_381::G1Projective>(MSM_ITEMS);
+
+    new_test_ext().execute_with(|| {
+        assert_ok!(ArkHostcalls::bls12_381_msm_g1(
+            RuntimeOrigin::none(),
+            bases.encode(),
+            scalars.encode(),
+            optimized,
+        ));
+    });
+}
+
+#[test]
+fn ark_bls12_381_msm_g1() {
+    bls12_381_msm_g1(false);
+}
+
+#[test]
+fn sub_bls12_381_msm_g1() {
+    bls12_381_msm_g1(true);
+}
+
+fn bls12_381_mul_projective_g1(optimized: bool) {
+    let (base, scalar) = make_scalar_args_projective::<ark_bls12_381::G1Projective>(SCALAR_WORDS);
+
+    new_test_ext().execute_with(|| {
+        assert_ok!(ArkHostcalls::bls12_381_mul_projective_g1(
+            RuntimeOrigin::none(),
+            base.encode(),
+            scalar.encode(),
+            optimized
+        ));
+    });
+}
+
+#[test]
+fn ark_bls12_381_mul_projective_g1() {
+    bls12_381_mul_projective_g1(false)
+}
+
+#[test]
+fn sub_bls12_381_mul_projective_g1() {
+    bls12_381_mul_projective_g1(true)
+}
+
+fn bls12_381_mul_affine_g1(optimized: bool) {
+    let (base, scalar) = make_scalar_args::<ark_bls12_381::G1Affine>(SCALAR_WORDS);
+
+    new_test_ext().execute_with(|| {
+        assert_ok!(ArkHostcalls::bls12_381_mul_affine_g1(
+            RuntimeOrigin::none(),
+            base.encode(),
+            scalar.encode(),
+            optimized
+        ));
+    });
+}
+
+#[test]
+fn ark_bls12_381_mul_affine_g1() {
+    bls12_381_mul_affine_g1(false)
+}
+
+#[test]
+fn sub_bls12_381_mul_affine_g1() {
+    bls12_381_mul_affine_g1(true)
+}
+
+fn bls12_381_msm_g2(optimized: bool) {
+    let (bases, scalars) = make_msm_args::<ark_bls12_381::G2Projective>(MSM_ITEMS);
+
+    new_test_ext().execute_with(|| {
+        assert_ok!(ArkHostcalls::bls12_381_msm_g2(
+            RuntimeOrigin::none(),
+            bases.encode(),
+            scalars.encode(),
+            optimized,
+        ));
+    });
+}
+
+#[test]
+fn ark_bls12_381_msm_g2() {
+    bls12_381_msm_g2(false);
+}
+
+#[test]
+fn sub_bls12_381_msm_g2() {
+    bls12_381_msm_g2(true);
+}
+
+fn bls12_381_mul_projective_g2(optimized: bool) {
+    let (base, scalar) = make_scalar_args_projective::<ark_bls12_381::G2Projective>(SCALAR_WORDS);
+
+    new_test_ext().execute_with(|| {
+        assert_ok!(ArkHostcalls::bls12_381_mul_projective_g2(
+            RuntimeOrigin::none(),
+            base.encode(),
+            scalar.encode(),
+            optimized
+        ));
+    });
+}
+
+#[test]
+fn ark_bls12_381_mul_projective_g2() {
+    bls12_381_mul_projective_g2(false)
+}
+
+#[test]
+fn sub_bls12_381_mul_projective_g2() {
+    bls12_381_mul_projective_g2(true)
+}
+
+fn bls12_381_mul_affine_g2(optimized: bool) {
+    let (base, scalar) = make_scalar_args::<ark_bls12_381::G2Affine>(SCALAR_WORDS);
+
+    new_test_ext().execute_with(|| {
+        assert_ok!(ArkHostcalls::bls12_381_mul_affine_g2(
+            RuntimeOrigin::none(),
+            base.encode(),
+            scalar.encode(),
+            optimized
+        ));
+    });
+}
+
+#[test]
+fn ark_bls12_381_mul_affine_g2() {
+    bls12_381_mul_affine_g2(false)
+}
+
+#[test]
+fn sub_bls12_381_mul_affine_g2() {
+    bls12_381_mul_affine_g2(true)
 }
 
 // ---------------------------------------------

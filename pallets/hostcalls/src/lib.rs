@@ -115,6 +115,102 @@ pub mod pallet {
             Ok(())
         }
 
+        #[pallet::call_index(11)]
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn bls12_381_msm_g1(
+            _: OriginFor<T>,
+            bases: Vec<u8>,
+            scalars: Vec<u8>,
+            optimized: bool,
+        ) -> DispatchResult {
+            if optimized {
+                msm_sw::<sub_bls12_381::g1::Config>(bases, scalars);
+            } else {
+                msm_sw::<ark_bls12_381::g1::Config>(bases, scalars);
+            }
+            Ok(())
+        }
+
+        #[pallet::call_index(12)]
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn bls12_381_mul_projective_g1(
+            _: OriginFor<T>,
+            base: Vec<u8>,
+            scalar: Vec<u8>,
+            optimized: bool,
+        ) -> DispatchResult {
+            if optimized {
+                mul_projective_sw::<sub_bls12_381::g1::Config>(base, scalar);
+            } else {
+                mul_projective_sw::<ark_bls12_381::g1::Config>(base, scalar);
+            }
+            Ok(())
+        }
+
+        #[pallet::call_index(13)]
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn bls12_381_mul_affine_g1(
+            _: OriginFor<T>,
+            base: Vec<u8>,
+            scalar: Vec<u8>,
+            optimized: bool,
+        ) -> DispatchResult {
+            if optimized {
+                mul_affine_sw::<sub_bls12_381::g1::Config>(base, scalar);
+            } else {
+                mul_affine_sw::<ark_bls12_381::g1::Config>(base, scalar);
+            }
+            Ok(())
+        }
+
+        #[pallet::call_index(14)]
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn bls12_381_msm_g2(
+            _: OriginFor<T>,
+            bases: Vec<u8>,
+            scalars: Vec<u8>,
+            optimized: bool,
+        ) -> DispatchResult {
+            if optimized {
+                msm_sw::<sub_bls12_381::g2::Config>(bases, scalars);
+            } else {
+                msm_sw::<ark_bls12_381::g2::Config>(bases, scalars);
+            }
+            Ok(())
+        }
+
+        #[pallet::call_index(15)]
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn bls12_381_mul_projective_g2(
+            _: OriginFor<T>,
+            base: Vec<u8>,
+            scalar: Vec<u8>,
+            optimized: bool,
+        ) -> DispatchResult {
+            if optimized {
+                mul_projective_sw::<sub_bls12_381::g2::Config>(base, scalar);
+            } else {
+                mul_projective_sw::<ark_bls12_381::g2::Config>(base, scalar);
+            }
+            Ok(())
+        }
+
+        #[pallet::call_index(16)]
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn bls12_381_mul_affine_g2(
+            _: OriginFor<T>,
+            base: Vec<u8>,
+            scalar: Vec<u8>,
+            optimized: bool,
+        ) -> DispatchResult {
+            if optimized {
+                mul_affine_sw::<sub_bls12_381::g2::Config>(base, scalar);
+            } else {
+                mul_affine_sw::<ark_bls12_381::g2::Config>(base, scalar);
+            }
+            Ok(())
+        }
+
         // ---------------------------------------------
         // Calls for ed-on-bls12-377
         // ---------------------------------------------
