@@ -35,6 +35,52 @@ fn sub_ed_on_bls12_377_msm_te() {
     ed_on_bls12_377_msm_te(true);
 }
 
+fn ed_on_bls12_377_mul_projective_te(optimized: bool) {
+    let (base, scalar) =
+        make_scalar_args_projective::<ark_ed_on_bls12_377::EdwardsProjective>(SCALAR_WORDS);
+
+    new_test_ext().execute_with(|| {
+        assert_ok!(ArkHostcalls::ed_on_bls12_377_mul_projective_te(
+            RuntimeOrigin::none(),
+            base.encode(),
+            scalar.encode(),
+            optimized,
+        ));
+    });
+}
+
+#[test]
+fn ark_ed_on_bls12_377_mul_projective_te() {
+    ed_on_bls12_377_mul_projective_te(false)
+}
+
+#[test]
+fn sub_ed_on_bls12_377_mul_projective_te() {
+    ed_on_bls12_377_mul_projective_te(true)
+}
+
+fn ed_on_bls12_377_mul_affine_te(optimized: bool) {
+    let (base, scalar) = make_scalar_args::<ark_ed_on_bls12_377::EdwardsAffine>(SCALAR_WORDS);
+
+    new_test_ext().execute_with(|| {
+        assert_ok!(ArkHostcalls::ed_on_bls12_377_mul_affine_te(
+            RuntimeOrigin::none(),
+            base.encode(),
+            scalar.encode(),
+            optimized
+        ));
+    });
+}
+
+#[test]
+fn ark_ed_on_bls12_377_mul_affine_te() {
+    ed_on_bls12_377_mul_affine_te(false)
+}
+#[test]
+fn sub_ed_on_bls12_377_mul_affine_te() {
+    ed_on_bls12_377_mul_affine_te(true)
+}
+
 // ---------------------------------------------
 // Tests for ed-on-bls12-381-bandersnatch
 // ---------------------------------------------

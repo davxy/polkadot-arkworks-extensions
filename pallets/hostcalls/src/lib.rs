@@ -130,6 +130,38 @@ pub mod pallet {
             Ok(())
         }
 
+        #[pallet::call_index(21)]
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn ed_on_bls12_377_mul_projective_te(
+            _: OriginFor<T>,
+            base: Vec<u8>,
+            scalar: Vec<u8>,
+            optimized: bool,
+        ) -> DispatchResult {
+            if optimized {
+                mul_projective_te::<sub_ed_on_bls12_377::EdwardsConfig>(base, scalar);
+            } else {
+                mul_projective_te::<ark_ed_on_bls12_377::EdwardsConfig>(base, scalar);
+            }
+            Ok(())
+        }
+
+        #[pallet::call_index(22)]
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn ed_on_bls12_377_mul_affine_te(
+            _: OriginFor<T>,
+            base: Vec<u8>,
+            scalar: Vec<u8>,
+            optimized: bool,
+        ) -> DispatchResult {
+            if optimized {
+                mul_affine_te::<sub_ed_on_bls12_377::EdwardsConfig>(base, scalar);
+            } else {
+                mul_affine_te::<ark_ed_on_bls12_377::EdwardsConfig>(base, scalar);
+            }
+            Ok(())
+        }
+
         // ---------------------------------------------
         // Calls for ed-on-bls12-381-bandersnatch
         // ---------------------------------------------
