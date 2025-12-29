@@ -8,7 +8,9 @@ run="cargo run --release -p ark-node --features runtime-benchmarks,small-ring --
 pallet=$1
 extrinsic=$2
 
+# How many repetitions of this benchmark should run from within the wasm
 repeat=3
+# How many samples we should take across the variable components
 steps=50
 
 results_dir="./results"
@@ -21,6 +23,10 @@ if [[ $pallet == "" ]]; then
     echo "Available pallets:"
     $run --list
     exit 1
+fi
+
+if [[ $extrinsic == "all" ]]; then
+    extrinsic="*"
 fi
 
 if [[ $extrinsic == "" ]]; then
@@ -40,6 +46,8 @@ $run \
   --steps $steps \
   --repeat=$repeat \
   --no-storage-info \
+  --disable-proof-recording \
+  --no-median-slopes \
   --json-file=$results_dir/results.json \
   --output=$results_dir/weights.rs
 
