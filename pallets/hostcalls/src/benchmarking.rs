@@ -12,11 +12,6 @@ const MSM_LEN_MIN: u32 = 10;
 // Max number of elements for multi scalar multiplication
 const MSM_LEN_MAX: u32 = 100;
 
-// // Scalar min words for single scalar multiplication (1 = 64 bit)
-// const SCALAR_WORDS_MIN: u32 = 1;
-// // Scalar max words for single scalar multiplication (16 = 1024 bit)
-// const SCALAR_WORDS_MAX: u32 = 16;
-
 #[benchmarks]
 mod benchmarks {
     use super::*;
