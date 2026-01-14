@@ -1,10 +1,14 @@
 #![allow(dead_code)]
 
+use ark_ff::Field;
 use ark_scale::ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_scale::scale::{Decode, Encode};
+use ark_snark::CircuitSpecificSetupSNARK;
+use ark_std::rand::rngs::StdRng;
+use ark_std::rand::{CryptoRng, RngCore, SeedableRng};
 use ark_std::vec::Vec;
 
-use crate::{ArkScaleHost, ArkScaleWire, ProofFor, ScalarFieldFor, VerifierKeyFor};
+use crate::{ArkScaleHost, ArkScaleWire, ProofFor, ProverKeyFor, ScalarFieldFor, VerifierKeyFor};
 
 pub struct VerificationKeyRaw(pub Vec<u8>);
 pub struct CRaw(pub Vec<u8>);
@@ -72,9 +76,115 @@ pub fn wire_to_host<T: CanonicalDeserialize + CanonicalSerialize>(
     serialize_uncompressed_host(v)
 }
 
-pub fn groth16_verify_params_gen() -> (VerificationKeyRaw, CRaw, ProofRaw) {
+pub fn groth16_verify_params_get_pregen() -> (VerificationKeyRaw, CRaw, ProofRaw) {
     let vk = wire_to_host::<VerifierKeyFor<ark_bls12_381::Bls12_381>>(VK_SERIALIZED);
     let c = wire_to_host::<ScalarFieldFor<ark_bls12_381::Bls12_381>>(C_SERIALIZED);
     let proof = wire_to_host::<ProofFor<ark_bls12_381::Bls12_381>>(PROOF_SERIALIZED);
     (VerificationKeyRaw(vk), CRaw(c), ProofRaw(proof))
+}
+
+pub fn groth16_verify_params_gen() -> (VerificationKeyRaw, CRaw, ProofRaw) {
+    use proof_builder::*;
+
+    let (prover, verifier) = setup();
+    let proof = prove(&prover, 3);
+
+    let public_input = ark_bls12_381::Fr::from(35);
+
+    let public_input_raw = serialize_uncompressed_host(public_input);
+    let verifier_raw = serialize_uncompressed_host(verifier);
+    let proof_raw = serialize_uncompressed_host(proof);
+
+    (
+        VerificationKeyRaw(verifier_raw),
+        CRaw(public_input_raw),
+        ProofRaw(proof_raw),
+    )
+}
+
+mod proof_builder {
+    use super::*;
+    use ark_bls12_381::Fr;
+    use ark_relations::{
+        lc,
+        r1cs::{ConstraintSynthesizer, ConstraintSystem, ConstraintSystemRef, SynthesisError},
+    };
+    use ark_snark::SNARK;
+
+    type Groth16 = ark_groth16::Groth16<ark_bls12_381::Bls12_381>;
+    type ProverKey = ProverKeyFor<ark_bls12_381::Bls12_381>;
+    type VerifierKey = VerifierKeyFor<ark_bls12_381::Bls12_381>;
+    type Proof = ProofFor<ark_bls12_381::Bls12_381>;
+
+    fn test_rng() -> impl CryptoRng + RngCore {
+        StdRng::seed_from_u64(ark_std::test_rng().next_u64())
+    }
+
+    impl<F: Field> ConstraintSynthesizer<F> for CubicDemoCircuit<F> {
+        fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
+            // x^3 + x + 5 == out can be flattened into following equations:
+            // x * x = t1
+            // t1 * x = t2
+            // (t2 + x + 5) * 1 = out
+            // so R1CS  w = [one, x, t1, t2, out]
+
+            // allocate witness x
+            let x_val = self.x;
+            let x = cs.new_witness_variable(|| x_val.ok_or(SynthesisError::AssignmentMissing))?;
+
+            // x * x = t1, allocate t2
+            let t1_val = x_val.map(|e| e.square());
+            let t1 = cs.new_witness_variable(|| t1_val.ok_or(SynthesisError::AssignmentMissing))?;
+            // enforce constraint x * x = t1
+            cs.enforce_constraint(lc!() + x, lc!() + x, lc!() + t1)?;
+
+            // t1 * x = t2, allocate t2
+            let t2_val = t1_val.map(|e| e * x_val.unwrap());
+            let t2 = cs.new_witness_variable(|| t2_val.ok_or(SynthesisError::AssignmentMissing))?;
+            // enforce constraint t1 * x = t2
+            cs.enforce_constraint(lc!() + t1, lc!() + x, lc!() + t2)?;
+
+            // (t2 + x + 5) * 1 = out, allocate out
+            let out =
+                cs.new_input_variable(|| Ok(t2_val.unwrap() + x_val.unwrap() + F::from(5)))?;
+            // enforce constraint (t2 + x + 5) * 1 = out
+            cs.enforce_constraint(
+                lc!() + t2 + x + (F::from(5), ConstraintSystem::<F>::one()),
+                lc!() + ConstraintSystem::<F>::one(),
+                lc!() + out,
+            )?;
+
+            Ok(())
+        }
+    }
+
+    // Verifier wants to prove knowledge of some x such that x^3 + x + 5 = 35
+    // or more general x^3 + x + 5 = y, with y a public value.
+    pub struct CubicDemoCircuit<F: Field> {
+        pub x: Option<F>,
+    }
+
+    pub fn setup() -> (ProverKey, VerifierKey) {
+        let mut rng = test_rng();
+        let c = CubicDemoCircuit::<ark_bls12_381::Fr> { x: None };
+        Groth16::setup(c, &mut rng).unwrap()
+    }
+
+    pub fn prove(prover: &ProverKey, witness: u32) -> Proof {
+        println!("Creating proofs...");
+
+        let c = CubicDemoCircuit::<Fr> {
+            x: Some(Fr::from(witness)),
+        };
+
+        let mut rng = test_rng();
+        Groth16::prove(prover, c, &mut rng).unwrap()
+    }
+
+    pub fn verify(verifier: &VerifierKey, public_input: u32, proof: &Proof) -> bool {
+        println!("Verifying the proof...");
+
+        let public_input = &[Fr::from(public_input)];
+        Groth16::verify(verifier, public_input, proof).unwrap()
+    }
 }

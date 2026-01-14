@@ -34,6 +34,9 @@ pub type ScalarFieldFor<PairingT> = <PairingT as Pairing>::ScalarField;
 pub type VerifierKeyFor<PairingT> =
     <Groth16<PairingT> as SNARK<<PairingT as Pairing>::ScalarField>>::VerifyingKey;
 
+pub type ProverKeyFor<PairingT> =
+    <Groth16<PairingT> as SNARK<<PairingT as Pairing>::ScalarField>>::ProvingKey;
+
 pub type ProofFor<PairingT> =
     <Groth16<PairingT> as SNARK<<PairingT as Pairing>::ScalarField>>::Proof;
 
