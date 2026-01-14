@@ -9,7 +9,7 @@ pallet=$1
 extrinsic=$2
 
 # How many repetitions of this benchmark should run from within the wasm
-repeat=3
+repeat=10
 # How many samples we should take across the variable components
 steps=50
 
@@ -38,6 +38,8 @@ if [[ $extrinsic == "" ]]; then
     echo "Use 'all' to run all benchmarks"
     exit 1
 fi
+
+export RUSTFLAGS="-C target-cpu=native"
 
 $run \
   --chain dev \

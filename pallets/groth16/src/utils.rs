@@ -178,7 +178,6 @@ mod test_proof_builder {
     }
 
     pub fn setup<P: Pairing>() -> (ProverKeyFor<P>, VerifierKeyFor<P>) {
-        println!("Setting up...");
         let mut rng = test_rng();
         let c = CubicCircuit::<ScalarFieldFor<P>> { x: None };
         Groth16::<P>::setup(c, &mut rng).unwrap()
@@ -186,7 +185,6 @@ mod test_proof_builder {
 
     pub fn prove<P: Pairing>(prover: &ProverKeyFor<P>, witness: u32) -> ProofFor<P> {
         let mut rng = test_rng();
-        println!("Creating proofs...");
         let circuit = CubicCircuit::<ScalarFieldFor<P>> {
             x: Some(ScalarFieldFor::<P>::from(witness)),
         };
@@ -198,7 +196,6 @@ mod test_proof_builder {
         public_input: u32,
         proof: &ProofFor<P>,
     ) -> bool {
-        println!("Verifying the proof...");
         let public_input = &[ScalarFieldFor::<P>::from(public_input)];
         Groth16::<P>::verify(verifier, public_input, proof).unwrap()
     }
