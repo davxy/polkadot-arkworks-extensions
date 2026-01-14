@@ -18,7 +18,7 @@ use ark_groth16::Groth16;
 use ark_snark::SNARK;
 use ark_std::vec::Vec;
 
-pub use sp_crypto_ec_utils::bls12_381 as sub_bls12_381;
+pub use sp_crypto_ec_utils::{bls12_377 as sub_bls12_377, bls12_381 as sub_bls12_381};
 
 pub type ArkScaleWire<T> = ark_scale::ArkScale<T, { ark_scale::WIRE }>;
 pub type ArkScaleHost<T> = ark_scale::ArkScale<T, { ark_scale::HOST_CALL }>;
@@ -61,10 +61,7 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
-        // ---------------------------------------------
-        // Calls for bls12-381
-        // ---------------------------------------------
-
+        /// Calls for bls12-381
         #[pallet::call_index(1)]
         #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
         pub fn bls12_381_groth16_verify(
@@ -78,6 +75,24 @@ pub mod pallet {
                 groth16_verify::<sub_bls12_381::Bls12_381>(vk, c, proof);
             } else {
                 groth16_verify::<ark_bls12_381::Bls12_381>(vk, c, proof);
+            }
+            Ok(())
+        }
+
+        /// Calls for bls12-377
+        #[pallet::call_index(2)]
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn bls12_377_groth16_verify(
+            _: OriginFor<T>,
+            vk: Vec<u8>,
+            c: Vec<u8>,
+            proof: Vec<u8>,
+            optimized: bool,
+        ) -> DispatchResult {
+            if optimized {
+                groth16_verify::<sub_bls12_377::Bls12_377>(vk, c, proof);
+            } else {
+                groth16_verify::<ark_bls12_377::Bls12_377>(vk, c, proof);
             }
             Ok(())
         }
