@@ -21,5 +21,13 @@ mod benchmarks {
         bls12_381_groth16_verify(RawOrigin::None, vk.0, c.0, proof.0, false);
     }
 
+    #[benchmark]
+    fn sub_bls12_381_groth16_verify() {
+        let (vk, c, proof) = utils::groth16_verify_params_gen();
+
+        #[extrinsic_call]
+        bls12_381_groth16_verify(RawOrigin::None, vk.0, c.0, proof.0, true);
+    }
+
     impl_benchmark_test_suite!(ArkGroth16, crate::mock::new_test_ext(), crate::mock::Test);
 }
