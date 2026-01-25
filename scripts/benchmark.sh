@@ -8,14 +8,18 @@ run="cargo run --release -p ark-node --features runtime-benchmarks,small-ring --
 pallet=$1
 extrinsic=$2
 
-# How many repetitions of this benchmark should run from within the wasm
-repeat=10
+# How many repetitions of each benchmark should be run
+REPEAT=${REPEAT:-3}
 # How many samples we should take across the variable components
-steps=50
+STEPS=${STEPS:-30}
 
 results_dir="./results"
 mkdir -p "$results_dir"
 
+
+if [[ $pallet == "all" ]]; then
+    pallet="*"
+fi
 
 if [[ $pallet == "" ]]; then
     echo "Usage ./benchmark.sh <pallet> <extrinsic>"
@@ -42,11 +46,11 @@ fi
 export RUSTFLAGS="-C target-cpu=native"
 
 $run \
-  --chain dev \
-  --pallet "$pallet" \
-  --extrinsic "$extrinsic" \
-  --steps $steps \
-  --repeat=$repeat \
+  --chain="dev" \
+  --pallet="$pallet" \
+  --extrinsic="$extrinsic" \
+  --steps="$STEPS" \
+  --repeat="$REPEAT" \
   --no-storage-info \
   --disable-proof-recording \
   --no-median-slopes \
