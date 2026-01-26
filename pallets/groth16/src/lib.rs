@@ -9,6 +9,7 @@ mod tests;
 mod benchmarking;
 
 mod utils;
+mod weights;
 
 use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
@@ -26,6 +27,7 @@ pub type ArkScaleWire<T> = ark_scale::ArkScale<T, { ark_scale::WIRE }>;
 pub type ArkScaleHost<T> = ark_scale::ArkScale<T, { ark_scale::HOST_CALL }>;
 
 pub use pallet::*;
+pub use weights::*;
 
 use crate::utils::deserialize_uncompressed_host;
 
@@ -59,7 +61,10 @@ pub mod pallet {
     pub struct Pallet<T>(_);
 
     #[pallet::config]
-    pub trait Config: frame_system::Config {}
+    pub trait Config: frame_system::Config {
+        /// Extrinsic weights
+        type WeightInfo: WeightInfo;
+    }
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {

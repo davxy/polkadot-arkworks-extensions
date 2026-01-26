@@ -9,6 +9,7 @@ mod tests;
 mod benchmarking;
 
 mod utils;
+mod weights;
 
 use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
@@ -32,6 +33,7 @@ pub type ScalarFieldFor<AffineT> = <AffineT as AffineRepr>::ScalarField;
 type ArkScale<T> = ark_scale::ArkScale<T>;
 
 pub use pallet::*;
+pub use weights::*;
 
 const DEFAULT_WEIGHT: u64 = 10_000;
 
@@ -86,7 +88,10 @@ pub mod pallet {
     pub struct Pallet<T>(_);
 
     #[pallet::config]
-    pub trait Config: frame_system::Config {}
+    pub trait Config: frame_system::Config {
+        /// Extrinsic weights
+        type WeightInfo: WeightInfo;
+    }
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {

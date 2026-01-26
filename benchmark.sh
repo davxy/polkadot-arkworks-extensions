@@ -1,21 +1,24 @@
 #!/bin/bash
-set -e
-
-cargo build --release -p ark-node --features runtime-benchmarks,small-ring
-
-run="cargo run --release -p ark-node --features runtime-benchmarks,small-ring -- benchmark pallet"
+set -ex
 
 pallet=$1
 extrinsic=$2
+extra_arg=$3
+
+binary="./target/release/ark-node"
+run="$binary benchmark pallet"
+
+# Skip compilation if --no-compile is passed unless the binary does not exist
+if [[ $extra_arg != "--no-compile" ]] || [[ ! -f $binary ]]; then
+    RUSTFLAGS="-C target-cpu=native" cargo build --release -p ark-node --features runtime-benchmarks,small-ring
+fi
 
 # How many repetitions of this benchmark should run from within the wasm
-repeat=10
+repeat=20
 # How many samples we should take across the variable components
 steps=50
 
-results_dir="./results"
-mkdir -p "$results_dir"
-
+results_dir="./pallets/${pallet#pallet_ark_}/src"
 
 if [[ $pallet == "" ]]; then
     echo "Usage ./benchmark.sh <pallet> <extrinsic>"
@@ -39,10 +42,9 @@ if [[ $extrinsic == "" ]]; then
     exit 1
 fi
 
-export RUSTFLAGS="-C target-cpu=native"
-
 $run \
-  --chain dev \
+  --runtime=target/release/wbuild/ark-runtime/ark_runtime.compact.wasm \
+  --template=pallets/frame-weight-template.hbs \
   --pallet "$pallet" \
   --extrinsic "$extrinsic" \
   --steps $steps \
@@ -52,4 +54,3 @@ $run \
   --no-median-slopes \
   --json-file=$results_dir/results.json \
   --output=$results_dir/weights.rs
-

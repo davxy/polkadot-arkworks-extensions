@@ -213,9 +213,13 @@ impl pallet_transaction_payment::Config for Runtime {
     type LengthToFee = FixedFee<1, <Self as pallet_balances::Config>::Balance>;
 }
 
-impl pallet_ark_hostcalls::Config for Runtime {}
+impl pallet_ark_hostcalls::Config for Runtime {
+    type WeightInfo = ();
+}
 
-impl pallet_ark_groth16::Config for Runtime {}
+impl pallet_ark_groth16::Config for Runtime {
+    type WeightInfo = ();
+}
 
 parameter_types! {
     pub MaxRingSize: u32 = pallet_ark_vrf::MAX_RING_SIZE;
@@ -223,6 +227,7 @@ parameter_types! {
 
 impl pallet_ark_vrf::Config for Runtime {
     type MaxRingSize = MaxRingSize;
+    type WeightInfo = ();
 }
 
 // Opaque types for the node to use

@@ -9,6 +9,7 @@ mod tests;
 mod benchmarking;
 
 mod utils;
+mod weights;
 
 use frame_support::pallet_prelude::*;
 
@@ -84,6 +85,7 @@ pub(crate) type SubSuite = sub_bandersnatch::BandersnatchSuite;
 
 // Re-export all pallet parts, this is needed to properly import the pallet into the runtime.
 pub use pallet::*;
+pub use weights::*;
 
 const DEFAULT_WEIGHT: u64 = 10_000;
 
@@ -207,6 +209,9 @@ pub mod pallet {
         /// Maximum number of people included in a ring before a new one is created.
         #[pallet::constant]
         type MaxRingSize: Get<u32>;
+
+        /// Extrinsic weights
+        type WeightInfo: WeightInfo;
     }
 
     #[pallet::storage]
