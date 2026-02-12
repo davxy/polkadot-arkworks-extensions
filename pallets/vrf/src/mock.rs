@@ -39,6 +39,7 @@ parameter_types! {
 
 impl crate::Config for Test {
     type MaxRingSize = MaxRingSize;
+    type WeightInfo = ();
 }
 
 // Build genesis storage according to the mock runtime.

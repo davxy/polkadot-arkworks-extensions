@@ -8,7 +8,7 @@ use frame_benchmarking::v2::*;
 use frame_system::RawOrigin;
 
 const RING_SIZE_MIN: u32 = 1;
-const RING_SIZE_MAX: u32 = 42;
+const RING_SIZE_MAX: u32 = 50;
 
 #[benchmarks]
 mod benchmarks {
