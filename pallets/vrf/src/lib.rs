@@ -189,6 +189,26 @@ pub struct RingProofRaw(pub [u8; RING_PROOF_SERIALIZED_SIZE]);
 )]
 pub struct RingVerifierKeyRaw(pub [u8; RING_VERIFIER_KEY_SERIALIZED_SIZE]);
 
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Encode,
+    Decode,
+    MaxEncodedLen,
+    TypeInfo,
+    DecodeWithMemTracking,
+)]
+pub struct RingProofBatchItem {
+    pub input: InputRaw,
+    pub output: OutputRaw,
+    pub proof: RingProofRaw,
+}
+
+pub type RingProofBatch<MaxSize> = BoundedVec<RingProofBatchItem, MaxSize>;
+
 #[frame_support::pallet]
 pub mod pallet {
     use core::ops::Range;
@@ -199,8 +219,6 @@ pub mod pallet {
         ring::RingSuite,
     };
     use frame_system::pallet_prelude::OriginFor;
-
-    use crate::utils::RingProofBatch;
 
     use super::*;
 

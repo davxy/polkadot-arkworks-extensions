@@ -2,12 +2,10 @@
 
 use crate::{
     ark_bandersnatch, CompressedPoint, IetfProofRaw, InputRaw, OutputRaw, PublicKeyRaw,
-    RingProofRaw,
+    RingProofBatchItem, RingProofRaw,
 };
 use ark_vrf::reexports::ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_vrf::reexports::ark_std::vec::Vec;
-use frame_support::pallet_prelude::*;
-use scale_info::TypeInfo;
 
 pub trait GetRaw<const N: usize>: CanonicalSerialize {
     fn get_raw(&self) -> [u8; N] {
@@ -55,26 +53,6 @@ pub fn ring_members_gen(ring_size: u32) -> Vec<ark_bandersnatch::Public> {
 }
 
 pub(crate) const SRS_RAW: &[u8] = include_bytes!("static/srs-uncompressed.bin");
-
-#[derive(
-    Copy,
-    Clone,
-    Debug,
-    PartialEq,
-    Eq,
-    Encode,
-    Decode,
-    MaxEncodedLen,
-    TypeInfo,
-    DecodeWithMemTracking,
-)]
-pub struct RingProofBatchItem {
-    pub input: InputRaw,
-    pub output: OutputRaw,
-    pub proof: RingProofRaw,
-}
-
-pub type RingProofBatch<MaxSize> = BoundedVec<RingProofBatchItem, MaxSize>;
 
 // TODO: testing module
 pub fn ring_verify_params_gen(

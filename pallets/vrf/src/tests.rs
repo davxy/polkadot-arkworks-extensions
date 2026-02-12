@@ -42,7 +42,7 @@ fn ring_verify_batch(optimized: bool) {
     let members = ring_commit(optimized);
     let batch_size = MaxBatchSize::get().min(3);
     let batch = utils::ring_verify_params_gen(MaxRingSize::get(), Some(&members), batch_size);
-    let batch: utils::RingProofBatch<MaxBatchSize> = batch.try_into().unwrap();
+    let batch: crate::RingProofBatch<MaxBatchSize> = batch.try_into().unwrap();
     Pallet::<Test>::ring_verify_batch(RuntimeOrigin::none(), batch, optimized).unwrap()
 }
 

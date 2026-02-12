@@ -86,31 +86,30 @@ mod benchmarks {
         ring_commit(RawOrigin::None, true);
     }
 
-    /// Verify `x` proofs (unbatched)
+    /// Verify a single ring proof
     #[benchmark]
     fn ark_ring_vrf_verify(x: Linear<RING_SIZE_MIN, RING_SIZE_MAX>) {
         let members = utils::ring_members_gen_raw(x);
-        let batch = utils::ring_verify_params_gen(T::MaxRingSize::get(), Some(&members));
+        let item = utils::ring_verify_params_gen(T::MaxRingSize::get(), Some(&members), 1)[0];
 
         Pallet::<T>::push_members_impl::<ArkSuite>(members);
         Pallet::<T>::commit_impl::<ArkSuite>();
 
         #[extrinsic_call]
-        ring_verify(RawOrigin::None, input_raw, output_raw, proof_raw, false);
+        ring_verify(RawOrigin::None, item.input, item.output, item.proof, false);
     }
 
     /// Same as `ark_ring_vrf_verify` with Substrate hostcalls
     #[benchmark]
     fn sub_ring_vrf_verify(x: Linear<RING_SIZE_MIN, RING_SIZE_MAX>) {
         let members = utils::ring_members_gen_raw(x);
-        let (input_raw, output_raw, proof_raw) =
-            utils::ring_verify_params_gen(T::MaxRingSize::get(), Some(&members));
+        let item = utils::ring_verify_params_gen(T::MaxRingSize::get(), Some(&members), 1)[0];
 
         Pallet::<T>::push_members_impl::<ArkSuite>(members);
         Pallet::<T>::commit_impl::<ArkSuite>();
 
         #[extrinsic_call]
-        ring_verify(RawOrigin::None, input_raw, output_raw, proof_raw, true);
+        ring_verify(RawOrigin::None, item.input, item.output, item.proof, true);
     }
 
     #[benchmark]
