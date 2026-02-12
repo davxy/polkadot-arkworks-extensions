@@ -223,10 +223,12 @@ impl pallet_ark_groth16::Config for Runtime {
 
 parameter_types! {
     pub MaxRingSize: u32 = pallet_ark_vrf::MAX_RING_SIZE;
+    pub MaxBatchSize: u32 = 32;
 }
 
 impl pallet_ark_vrf::Config for Runtime {
     type MaxRingSize = MaxRingSize;
+    type MaxBatchSize = MaxBatchSize;
     type WeightInfo = ();
 }
 

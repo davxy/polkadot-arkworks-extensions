@@ -35,10 +35,12 @@ impl frame_system::Config for Test {
 
 parameter_types! {
     pub MaxRingSize: u32 = crate::MAX_RING_SIZE;
+    pub MaxBatchSize: u32 = 32;
 }
 
 impl crate::Config for Test {
     type MaxRingSize = MaxRingSize;
+    type MaxBatchSize = MaxBatchSize;
     type WeightInfo = ();
 }
 

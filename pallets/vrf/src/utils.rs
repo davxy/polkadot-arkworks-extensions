@@ -6,6 +6,8 @@ use crate::{
 };
 use ark_vrf::reexports::ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_vrf::reexports::ark_std::vec::Vec;
+use frame_support::pallet_prelude::*;
+use scale_info::TypeInfo;
 
 pub trait GetRaw<const N: usize>: CanonicalSerialize {
     fn get_raw(&self) -> [u8; N] {
@@ -54,15 +56,35 @@ pub fn ring_members_gen(ring_size: u32) -> Vec<ark_bandersnatch::Public> {
 
 pub(crate) const SRS_RAW: &[u8] = include_bytes!("static/srs-uncompressed.bin");
 
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Encode,
+    Decode,
+    MaxEncodedLen,
+    TypeInfo,
+    DecodeWithMemTracking,
+)]
+pub struct RingProofBatchItem {
+    pub input: InputRaw,
+    pub output: OutputRaw,
+    pub proof: RingProofRaw,
+}
+
+pub type RingProofBatch<MaxSize> = BoundedVec<RingProofBatchItem, MaxSize>;
+
+// TODO: testing module
 pub fn ring_verify_params_gen(
     max_ring_size: u32,
     members: Option<&[PublicKeyRaw]>,
-) -> (InputRaw, OutputRaw, RingProofRaw) {
+    batch_size: u32,
+) -> Vec<RingProofBatchItem> {
     use ark_vrf::ring::Prover;
 
     let secret = ark_bandersnatch::Secret::from_seed(&[0_u8]);
-    let input = ark_bandersnatch::Input::new(b"input").unwrap();
-    let output = secret.output(input);
 
     let pcs_params =
         ark_bandersnatch::PcsParams::deserialize_uncompressed_unchecked(SRS_RAW).unwrap();
@@ -82,11 +104,18 @@ pub fn ring_verify_params_gen(
     let prover_key = params.prover_key(&ring_members);
     let prover = params.prover(prover_key, 0);
 
-    let proof = secret.prove(input, output, &[], &prover);
-
-    (
-        CompressedPoint(input.get_raw()),
-        CompressedPoint(output.get_raw()),
-        RingProofRaw(proof.get_raw()),
-    )
+    (0..batch_size)
+        .map(|i| {
+            let input = ark_bandersnatch::Input::new(&i.to_le_bytes()).unwrap();
+            let output = secret.output(input);
+            let input_raw = CompressedPoint(input.get_raw());
+            let output_raw = CompressedPoint(output.get_raw());
+            let proof = secret.prove(input, output, [], &prover);
+            RingProofBatchItem {
+                input: input_raw.clone(),
+                output: output_raw.clone(),
+                proof: RingProofRaw(proof.get_raw()),
+            }
+        })
+        .collect()
 }

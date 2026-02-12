@@ -103,6 +103,7 @@ const SRS_ITEM_SERIALIZED_SIZE: usize = 48;
 const RING_BUILDER_SERIALIZED_SIZE: usize = 848;
 
 #[derive(
+    Copy,
     Clone,
     Eq,
     PartialEq,
@@ -199,6 +200,8 @@ pub mod pallet {
     };
     use frame_system::pallet_prelude::OriginFor;
 
+    use crate::utils::RingProofBatch;
+
     use super::*;
 
     #[pallet::pallet]
@@ -209,6 +212,10 @@ pub mod pallet {
         /// Maximum number of people included in a ring before a new one is created.
         #[pallet::constant]
         type MaxRingSize: Get<u32>;
+
+        /// Maximum number of ring proofs in a batch verification.
+        #[pallet::constant]
+        type MaxBatchSize: Get<u32>;
 
         /// Extrinsic weights
         type WeightInfo: WeightInfo;
@@ -331,6 +338,23 @@ pub mod pallet {
                 Self::ring_verify_impl::<SubSuite>(input_raw, output_raw, proof_raw);
             } else {
                 Self::ring_verify_impl::<ArkSuite>(input_raw, output_raw, proof_raw);
+            }
+            Ok(())
+        }
+
+        #[pallet::call_index(5)]
+        #[pallet::weight(Weight::from_all(DEFAULT_WEIGHT))]
+        pub fn ring_verify_batch(
+            _: OriginFor<T>,
+            batch: RingProofBatch<T::MaxBatchSize>,
+            optimized: bool,
+        ) -> DispatchResult {
+            for item in batch.iter() {
+                if optimized {
+                    Self::ring_verify_impl::<SubSuite>(item.input, item.output, item.proof);
+                } else {
+                    Self::ring_verify_impl::<ArkSuite>(item.input, item.output, item.proof);
+                }
             }
             Ok(())
         }
