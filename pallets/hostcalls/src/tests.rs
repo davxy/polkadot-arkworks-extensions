@@ -12,6 +12,59 @@ const SCALAR_WORDS: u32 = 3;
 // Tests for bls12-381
 // ---------------------------------------------
 
+use std::time::Instant;
+
+fn bls12_381_pairing_bench(optimized: bool) {
+    let (a, b) = make_pairing_args::<ark_bls12_381::G1Affine, ark_bls12_381::G2Affine>();
+    let start = Instant::now();
+    for _ in 0..100 {
+        let _ = ArkHostcalls::bls12_381_pairing(
+            RuntimeOrigin::none(),
+            a.encode(),
+            b.encode(),
+            optimized
+        );
+    }
+    let elapsed = start.elapsed();
+    println!(
+        "BLS12-381 Pairing ({}): Total 100 iterations: {:?}, Avg: {:?}",
+        if optimized { "Host" } else { "Wasm" },
+        elapsed,
+        elapsed / 100
+    );
+}
+
+fn bls12_381_msm_g1_bench(optimized: bool, size: u32) {
+    let (bases, scalars) = make_msm_args::<ark_bls12_381::G1Projective>(size);
+    let start = Instant::now();
+    for _ in 0..10 {
+        let _ = ArkHostcalls::bls12_381_msm_g1(
+            RuntimeOrigin::none(),
+            bases.encode(),
+            scalars.encode(),
+            optimized,
+        );
+    }
+    let elapsed = start.elapsed();
+    println!(
+        "BLS12-381 MSM G1 ({}): Total 10 iterations (size={}): {:?}, Avg: {:?}",
+        if optimized { "Host" } else { "Wasm" },
+        size,
+        elapsed,
+        elapsed / 10
+    );
+}
+
+#[test]
+fn bench_hostcalls() {
+    new_test_ext().execute_with(|| {
+        bls12_381_pairing_bench(false);
+        bls12_381_pairing_bench(true);
+        bls12_381_msm_g1_bench(false, 100);
+        bls12_381_msm_g1_bench(true, 100);
+    });
+}
+
 fn bls12_381_pairing(optimized: bool) {
     let (a, b) = make_pairing_args::<ark_bls12_381::G1Affine, ark_bls12_381::G2Affine>();
 

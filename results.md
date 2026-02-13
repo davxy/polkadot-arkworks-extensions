@@ -1,45 +1,95 @@
-# pallet_ark_groth16
-
-| extrinsic | arkworks | substrate | speedup |
-|-----------|----------|-----------|---------|
-| bls12_377_groth16_verify | 17.51 ms | 2.83 ms | 6.19x |
-| bls12_381_groth16_verify | 16.61 ms | 2.83 ms | 5.88x |
-| bw6_761_groth16_verify | 76.45 ms | 9.59 ms | 7.97x |
-
-# pallet_ark_hostcalls
-
-| extrinsic | arkworks | substrate | speedup |
-|-----------|----------|-----------|---------|
-| bls12_381_msm_g1_x_10 | 10.28 ms | 3.09 ms | 3.33x |
-| bls12_381_msm_g1_x_100 | 70.56 ms | 25.46 ms | 2.77x |
-| bls12_381_msm_g2_x_10 | 24.73 ms | 6.99 ms | 3.54x |
-| bls12_381_msm_g2_x_100 | 167.78 ms | 61.67 ms | 2.72x |
-| bls12_381_mul_affine_g1 | 1.46 ms | 1.46 ms | 1.00x |
-| bls12_381_mul_affine_g2 | 3.76 ms | 3.76 ms | 1.00x |
-| bls12_381_mul_projective_g1 | 739.66 us | 112.19 us | 6.59x |
-| bls12_381_mul_projective_g2 | 3.38 ms | 512.46 us | 6.59x |
-| bls12_381_pairing | 7.97 ms | 2.00 ms | 3.99x |
-| ed_on_bls12_377_msm_te_x_10 | 8.94 ms | 2.31 ms | 3.88x |
-| ed_on_bls12_377_msm_te_x_100 | 68.99 ms | 19.37 ms | 3.56x |
-| ed_on_bls12_377_mul_affine_te | 1.13 ms | 273.59 us | 4.13x |
-| ed_on_bls12_377_mul_projective_te | 489.66 us | 90.32 us | 5.42x |
-| ed_on_bls12_381_bandersnatch_msm_sw_x_10 | 8.05 ms | 2.83 ms | 2.84x |
-| ed_on_bls12_381_bandersnatch_msm_sw_x_100 | 67.64 ms | 20.31 ms | 3.33x |
-| ed_on_bls12_381_bandersnatch_msm_te_x_10 | 8.74 ms | 2.20 ms | 3.98x |
-| ed_on_bls12_381_bandersnatch_msm_te_x_100 | 66.71 ms | 19.04 ms | 3.50x |
-| ed_on_bls12_381_bandersnatch_mul_affine_sw | 1.12 ms | 311.59 us | 3.58x |
-| ed_on_bls12_381_bandersnatch_mul_affine_te | 1.06 ms | 258.24 us | 4.12x |
-| ed_on_bls12_381_bandersnatch_mul_projective_sw | 649.22 us | 126.31 us | 5.14x |
-| ed_on_bls12_381_bandersnatch_mul_projective_te | 510.03 us | 95.70 us | 5.33x |
-
 # pallet_ark_vrf
 
 | extrinsic | arkworks | substrate | speedup |
 |-----------|----------|-----------|---------|
-| ietf_vrf_verify | 2.10 ms | 599.48 us | 3.50x |
-| ring_vrf_commit_buffered_x_1 | 3.53 ms | 1.45 ms | 2.43x |
-| ring_vrf_commit_buffered_x_42 | 51.53 ms | 15.71 ms | 3.28x |
-| ring_vrf_commit_unbuffered_x_1 | 26.06 us | 37.48 us | 0.70x |
-| ring_vrf_commit_unbuffered_x_42 | 23.11 us | 38.40 us | 0.60x |
-| ring_vrf_verify_x_1 | 30.89 ms | 16.83 ms | 1.84x |
-| ring_vrf_verify_x_42 | 29.60 ms | 16.88 ms | 1.75x |
+| ietf_vrf_verify | 991.67 us | 317.67 us | 3.12x |
+| ring_vrf_commit_buffered_x_1 | 1.60 ms | 575.67 us | 2.78x |
+| ring_vrf_commit_buffered_x_10 | 6.80 ms | 2.11 ms | 3.22x |
+| ring_vrf_commit_buffered_x_12 | 7.61 ms | 2.56 ms | 2.98x |
+| ring_vrf_commit_buffered_x_13 | 8.14 ms | 2.77 ms | 2.94x |
+| ring_vrf_commit_buffered_x_15 | 9.20 ms | 3.04 ms | 3.03x |
+| ring_vrf_commit_buffered_x_16 | 9.67 ms | 3.23 ms | 2.99x |
+| ring_vrf_commit_buffered_x_17 | 10.06 ms | 3.41 ms | 2.95x |
+| ring_vrf_commit_buffered_x_19 | 11.22 ms | 3.68 ms | 3.05x |
+| ring_vrf_commit_buffered_x_2 | 2.28 ms | 876.33 us | 2.60x |
+| ring_vrf_commit_buffered_x_20 | 11.54 ms | 3.94 ms | 2.93x |
+| ring_vrf_commit_buffered_x_22 | 12.55 ms | 4.32 ms | 2.91x |
+| ring_vrf_commit_buffered_x_23 | 12.90 ms | 4.79 ms | 2.69x |
+| ring_vrf_commit_buffered_x_25 | 14.16 ms | 4.77 ms | 2.97x |
+| ring_vrf_commit_buffered_x_26 | 14.42 ms | 4.84 ms | 2.98x |
+| ring_vrf_commit_buffered_x_27 | 15.00 ms | 5.36 ms | 2.80x |
+| ring_vrf_commit_buffered_x_29 | 15.92 ms | 5.65 ms | 2.82x |
+| ring_vrf_commit_buffered_x_3 | 2.94 ms | 1.03 ms | 2.85x |
+| ring_vrf_commit_buffered_x_30 | 16.27 ms | 5.47 ms | 2.98x |
+| ring_vrf_commit_buffered_x_32 | 17.53 ms | 5.94 ms | 2.95x |
+| ring_vrf_commit_buffered_x_33 | 19.81 ms | 6.04 ms | 3.28x |
+| ring_vrf_commit_buffered_x_34 | 20.29 ms | 6.27 ms | 3.23x |
+| ring_vrf_commit_buffered_x_36 | 20.97 ms | 6.49 ms | 3.23x |
+| ring_vrf_commit_buffered_x_37 | 21.42 ms | 6.75 ms | 3.17x |
+| ring_vrf_commit_buffered_x_39 | 22.30 ms | 6.99 ms | 3.19x |
+| ring_vrf_commit_buffered_x_40 | 22.75 ms | 7.08 ms | 3.21x |
+| ring_vrf_commit_buffered_x_42 | 23.40 ms | 7.59 ms | 3.08x |
+| ring_vrf_commit_buffered_x_5 | 4.12 ms | 1.31 ms | 3.13x |
+| ring_vrf_commit_buffered_x_6 | 4.62 ms | 1.81 ms | 2.55x |
+| ring_vrf_commit_buffered_x_8 | 5.70 ms | 1.81 ms | 3.15x |
+| ring_vrf_commit_buffered_x_9 | 6.19 ms | 2.02 ms | 3.06x |
+| ring_vrf_commit_unbuffered_x_1 | 17.00 us | 24.00 us | 0.71x |
+| ring_vrf_commit_unbuffered_x_10 | 17.00 us | 23.33 us | 0.73x |
+| ring_vrf_commit_unbuffered_x_12 | 14.33 us | 23.00 us | 0.62x |
+| ring_vrf_commit_unbuffered_x_13 | 16.33 us | 24.33 us | 0.67x |
+| ring_vrf_commit_unbuffered_x_15 | 20.67 us | 24.00 us | 0.86x |
+| ring_vrf_commit_unbuffered_x_16 | 18.67 us | 22.00 us | 0.85x |
+| ring_vrf_commit_unbuffered_x_17 | 17.67 us | 25.00 us | 0.71x |
+| ring_vrf_commit_unbuffered_x_19 | 22.33 us | 33.67 us | 0.66x |
+| ring_vrf_commit_unbuffered_x_2 | 13.00 us | 23.00 us | 0.57x |
+| ring_vrf_commit_unbuffered_x_20 | 14.67 us | 24.67 us | 0.59x |
+| ring_vrf_commit_unbuffered_x_22 | 22.33 us | 29.33 us | 0.76x |
+| ring_vrf_commit_unbuffered_x_23 | 21.00 us | 30.33 us | 0.69x |
+| ring_vrf_commit_unbuffered_x_25 | 24.67 us | 29.00 us | 0.85x |
+| ring_vrf_commit_unbuffered_x_26 | 23.67 us | 32.67 us | 0.72x |
+| ring_vrf_commit_unbuffered_x_27 | 23.67 us | 35.33 us | 0.67x |
+| ring_vrf_commit_unbuffered_x_29 | 19.00 us | 35.67 us | 0.53x |
+| ring_vrf_commit_unbuffered_x_3 | 13.33 us | 23.33 us | 0.57x |
+| ring_vrf_commit_unbuffered_x_30 | 17.67 us | 28.33 us | 0.62x |
+| ring_vrf_commit_unbuffered_x_32 | 19.00 us | 24.67 us | 0.77x |
+| ring_vrf_commit_unbuffered_x_33 | 19.67 us | 30.00 us | 0.66x |
+| ring_vrf_commit_unbuffered_x_34 | 19.67 us | 25.67 us | 0.77x |
+| ring_vrf_commit_unbuffered_x_36 | 13.00 us | 34.67 us | 0.38x |
+| ring_vrf_commit_unbuffered_x_37 | 16.67 us | 29.00 us | 0.57x |
+| ring_vrf_commit_unbuffered_x_39 | 15.67 us | 35.00 us | 0.45x |
+| ring_vrf_commit_unbuffered_x_40 | 15.33 us | 32.67 us | 0.47x |
+| ring_vrf_commit_unbuffered_x_42 | 14.67 us | 35.00 us | 0.42x |
+| ring_vrf_commit_unbuffered_x_5 | 14.00 us | 26.00 us | 0.54x |
+| ring_vrf_commit_unbuffered_x_6 | 13.00 us | 24.33 us | 0.53x |
+| ring_vrf_commit_unbuffered_x_8 | 10.33 us | 38.67 us | 0.27x |
+| ring_vrf_commit_unbuffered_x_9 | 12.00 us | 35.67 us | 0.34x |
+| ring_vrf_verify_x_1 | 13.86 ms | 8.27 ms | 1.68x |
+| ring_vrf_verify_x_10 | 13.65 ms | 8.19 ms | 1.67x |
+| ring_vrf_verify_x_12 | 13.61 ms | 9.27 ms | 1.47x |
+| ring_vrf_verify_x_13 | 13.73 ms | 8.24 ms | 1.67x |
+| ring_vrf_verify_x_15 | 13.71 ms | 8.22 ms | 1.67x |
+| ring_vrf_verify_x_16 | 13.78 ms | 8.23 ms | 1.67x |
+| ring_vrf_verify_x_17 | 13.74 ms | 8.21 ms | 1.67x |
+| ring_vrf_verify_x_19 | 13.52 ms | 8.09 ms | 1.67x |
+| ring_vrf_verify_x_2 | 13.60 ms | 8.17 ms | 1.66x |
+| ring_vrf_verify_x_20 | 13.65 ms | 8.11 ms | 1.68x |
+| ring_vrf_verify_x_22 | 13.68 ms | 8.26 ms | 1.66x |
+| ring_vrf_verify_x_23 | 13.55 ms | 8.05 ms | 1.68x |
+| ring_vrf_verify_x_25 | 13.69 ms | 8.13 ms | 1.68x |
+| ring_vrf_verify_x_26 | 13.63 ms | 8.14 ms | 1.67x |
+| ring_vrf_verify_x_27 | 14.77 ms | 7.97 ms | 1.85x |
+| ring_vrf_verify_x_29 | 13.59 ms | 8.06 ms | 1.69x |
+| ring_vrf_verify_x_3 | 13.56 ms | 8.23 ms | 1.65x |
+| ring_vrf_verify_x_30 | 13.70 ms | 8.17 ms | 1.68x |
+| ring_vrf_verify_x_32 | 13.57 ms | 8.08 ms | 1.68x |
+| ring_vrf_verify_x_33 | 13.78 ms | 8.16 ms | 1.69x |
+| ring_vrf_verify_x_34 | 13.89 ms | 8.37 ms | 1.66x |
+| ring_vrf_verify_x_36 | 13.65 ms | 8.01 ms | 1.70x |
+| ring_vrf_verify_x_37 | 13.65 ms | 8.12 ms | 1.68x |
+| ring_vrf_verify_x_39 | 13.67 ms | 8.15 ms | 1.68x |
+| ring_vrf_verify_x_40 | 14.01 ms | 8.17 ms | 1.72x |
+| ring_vrf_verify_x_42 | 13.57 ms | 8.18 ms | 1.66x |
+| ring_vrf_verify_x_5 | 13.71 ms | 8.18 ms | 1.68x |
+| ring_vrf_verify_x_6 | 13.65 ms | 8.33 ms | 1.64x |
+| ring_vrf_verify_x_8 | 13.74 ms | 8.97 ms | 1.53x |
+| ring_vrf_verify_x_9 | 13.73 ms | 8.15 ms | 1.69x |

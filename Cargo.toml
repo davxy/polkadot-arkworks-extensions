@@ -79,3 +79,7 @@ sp-tracing = { git = "https://github.com/paritytech/polkadot-sdk", default-featu
 substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk", default-features = false }
 substrate-frame-rpc-system = { git = "https://github.com/paritytech/polkadot-sdk", default-features = false }
 substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk", default-features = false }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1

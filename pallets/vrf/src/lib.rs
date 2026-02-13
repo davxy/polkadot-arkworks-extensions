@@ -89,7 +89,7 @@ pub use weights::*;
 
 const DEFAULT_WEIGHT: u64 = 10_000;
 
-const SRS_PAGE_SIZE: usize = 1 << 3;
+const SRS_PAGE_SIZE: usize = 1 << 5;
 
 const COMPRESSED_POINT_SIZE: usize = 32;
 
@@ -99,7 +99,7 @@ const RING_PROOF_SERIALIZED_SIZE: usize = 752;
 
 const RING_VERIFIER_KEY_SERIALIZED_SIZE: usize = 384;
 
-const SRS_ITEM_SERIALIZED_SIZE: usize = 48;
+const SRS_ITEM_SERIALIZED_SIZE: usize = 96;
 const RING_BUILDER_SERIALIZED_SIZE: usize = 848;
 
 #[derive(
@@ -282,10 +282,11 @@ pub mod pallet {
             for (i, item) in builder_pcs_params.0.iter().enumerate() {
                 let page_off = i % SRS_PAGE_SIZE;
                 let raw = &mut srs_page.0[page_off];
-                item.serialize_compressed(&mut raw.0[..]).unwrap();
-                if page_off == SRS_PAGE_SIZE - 1 {
+                item.serialize_uncompressed(&mut raw.0[..]).unwrap();
+                if page_off == SRS_PAGE_SIZE - 1 || i == builder_pcs_params.0.len() - 1 {
                     let page_idx = i / SRS_PAGE_SIZE;
                     Srs::<T>::insert(page_idx as u32, srs_page.clone());
+                    srs_page = SrsPage::default();
                 }
             }
 
@@ -421,15 +422,15 @@ pub mod pallet {
             proof_raw: IetfProofRaw,
         ) {
             use ark_vrf::ietf::Verifier;
-            let input =
-                ark_vrf::Input::<S>::deserialize_compressed_unchecked(&input_raw.0[..]).unwrap();
-            let output =
-                ark_vrf::Output::<S>::deserialize_compressed_unchecked(&output_raw.0[..]).unwrap();
-            let public =
-                ark_vrf::Public::<S>::deserialize_compressed_unchecked(&public_raw.0[..]).unwrap();
-            let proof =
-                ark_vrf::ietf::Proof::<S>::deserialize_compressed_unchecked(&proof_raw.0[..])
-                    .unwrap();
+            let mut input_slice = &input_raw.0[..];
+            let mut output_slice = &output_raw.0[..];
+            let mut public_slice = &public_raw.0[..];
+            let mut proof_slice = &proof_raw.0[..];
+
+            let input = ark_vrf::Input::<S>::deserialize_compressed_unchecked(&mut input_slice).unwrap();
+            let output = ark_vrf::Output::<S>::deserialize_compressed_unchecked(&mut output_slice).unwrap();
+            let public = ark_vrf::Public::<S>::deserialize_compressed_unchecked(&mut public_slice).unwrap();
+            let proof = ark_vrf::ietf::Proof::<S>::deserialize_compressed_unchecked(&mut proof_slice).unwrap();
             public.verify(input, output, [], &proof).unwrap();
         }
 
@@ -437,11 +438,11 @@ pub mod pallet {
             use ark_vrf::ring::Verifier;
 
             let verifier_key_raw = RingVerifierKey::<T>::get().unwrap();
-            let verifier_key =
-                ark_vrf::ring::RingVerifierKey::<S>::deserialize_compressed_unchecked(
-                    &verifier_key_raw.0[..],
-                )
-                .unwrap();
+            let mut verifier_key_slice = &verifier_key_raw.0[..];
+            let verifier_key = ark_vrf::ring::RingVerifierKey::<S>::deserialize_compressed_unchecked(
+                &mut verifier_key_slice,
+            )
+            .unwrap();
 
             let max_ring_size = T::MaxRingSize::get();
             let verifier = ark_vrf::ring::RingProofParams::<S>::verifier_no_context(
@@ -451,33 +452,43 @@ pub mod pallet {
 
             // TODO: replace with true batching when available
             for item in batch {
-                let input =
-                    ark_vrf::Input::<S>::deserialize_compressed_unchecked(&item.input.0[..])
-                        .unwrap();
-                let output =
-                    ark_vrf::Output::<S>::deserialize_compressed_unchecked(&item.output.0[..])
-                        .unwrap();
-                let proof =
-                    ark_vrf::ring::Proof::<S>::deserialize_compressed_unchecked(&item.proof.0[..])
-                        .unwrap();
+                let mut input_slice = &item.input.0[..];
+                let mut output_slice = &item.output.0[..];
+                let mut proof_slice = &item.proof.0[..];
+
+                let input = ark_vrf::Input::<S>::deserialize_compressed_unchecked(&mut input_slice).unwrap();
+                let output = ark_vrf::Output::<S>::deserialize_compressed_unchecked(&mut output_slice).unwrap();
+                let proof = ark_vrf::ring::Proof::<S>::deserialize_compressed_unchecked(&mut proof_slice).unwrap();
                 ark_vrf::Public::<S>::verify(input, output, [], &proof, &verifier).unwrap();
             }
         }
 
         pub(crate) fn commit_impl<S: RingSuite>() {
             let buffered_members = RingKeys::<T>::get().unwrap_or_default();
+
+            let builder_raw = RingBuilder::<T>::get().unwrap();
+            let mut builder_slice = &builder_raw.0[..];
+            let mut builder = ark_vrf::ring::RingVerifierKeyBuilder::<S>::deserialize_uncompressed_unchecked(
+                &mut builder_slice,
+            )
+            .unwrap();
+
             if !buffered_members.is_empty() {
-                Self::push_members_impl::<S>(buffered_members.to_vec());
+                Self::increment_ring_size(buffered_members.len() as u32);
+                let new_members = buffered_members
+                    .into_iter()
+                    .map(|m| {
+                        let mut m_slice = &m.0[..];
+                        ark_vrf::AffinePoint::<S>::deserialize_compressed_unchecked(&mut m_slice)
+                            .unwrap()
+                    })
+                    .collect::<Vec<_>>();
+                builder
+                    .append(&new_members, Self::fetch_srs_range::<S>)
+                    .unwrap();
             }
 
             log::debug!("Committing ring");
-
-            let builder_raw = RingBuilder::<T>::get().unwrap();
-            let builder =
-                ark_vrf::ring::RingVerifierKeyBuilder::<S>::deserialize_uncompressed_unchecked(
-                    &builder_raw.0[..],
-                )
-                .unwrap();
             let verifier_key = builder.finalize();
             let mut verifier_key_raw = RingVerifierKeyRaw([0u8; RING_VERIFIER_KEY_SERIALIZED_SIZE]);
             verifier_key
@@ -490,16 +501,17 @@ pub mod pallet {
             Self::increment_ring_size(new_members.len() as u32);
 
             let mut builder_raw = RingBuilder::<T>::get().unwrap();
-            let mut builder =
-                ark_vrf::ring::RingVerifierKeyBuilder::<S>::deserialize_uncompressed_unchecked(
-                    &builder_raw.0[..],
-                )
-                .unwrap();
+            let mut builder_slice = &builder_raw.0[..];
+            let mut builder = ark_vrf::ring::RingVerifierKeyBuilder::<S>::deserialize_uncompressed_unchecked(
+                &mut builder_slice,
+            )
+            .unwrap();
             let new_members = new_members
                 .into_iter()
                 .map(|m| {
                     log::trace!("Pushing {:02x?}", m.0);
-                    ark_vrf::AffinePoint::<S>::deserialize_compressed_unchecked(&m.0[..]).unwrap()
+                    let mut m_slice = &m.0[..];
+                    ark_vrf::AffinePoint::<S>::deserialize_compressed_unchecked(&mut m_slice).unwrap()
                 })
                 .collect::<Vec<_>>();
             builder
@@ -528,19 +540,25 @@ pub mod pallet {
             let start_page = range.start / SRS_PAGE_SIZE;
             let end_page = (range.end - 1) / SRS_PAGE_SIZE;
 
-            Some(
-                (start_page..=end_page)
-                    .flat_map(|page_idx| {
-                        log::trace!("  Reading page {page_idx}");
-                        Srs::<T>::get(page_idx as u32).unwrap().0.into_iter()
-                    })
-                    .skip(range.start % SRS_PAGE_SIZE)
-                    .take(range.end - range.start)
-                    .map(|data| {
-                        ark_vrf::ring::G1Affine::<S>::deserialize_compressed(&data.0[..]).unwrap()
-                    })
-                    .collect(),
-            )
+            let mut items = Vec::with_capacity(range.end - range.start);
+            for page_idx in start_page..=end_page {
+                if let Some(page) = Srs::<T>::get(page_idx as u32) {
+                    let page_start = page_idx * SRS_PAGE_SIZE;
+                    let offset = range.start.saturating_sub(page_start);
+                    let end_offset = core::cmp::min(range.end - page_start, SRS_PAGE_SIZE);
+
+                    for i in offset..end_offset {
+                        let mut data_slice = &page.0[i].0[..];
+                        items.push(
+                            ark_vrf::ring::G1Affine::<S>::deserialize_uncompressed_unchecked(
+                                &mut data_slice,
+                            )
+                            .unwrap(),
+                        );
+                    }
+                }
+            }
+            Some(items)
         }
     }
 }

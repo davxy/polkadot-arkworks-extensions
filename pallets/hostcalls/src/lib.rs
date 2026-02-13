@@ -38,44 +38,58 @@ pub use weights::*;
 const DEFAULT_WEIGHT: u64 = 10_000;
 
 fn msm_sw<C: SWCurveConfig>(bases: Vec<u8>, scalars: Vec<u8>) {
-    let bases = ArkScale::<Vec<SWAffine<C>>>::decode(&mut bases.as_slice()).unwrap();
-    let scalars = ArkScale::<Vec<C::ScalarField>>::decode(&mut scalars.as_slice()).unwrap();
+    let mut bases_slice = bases.as_slice();
+    let mut scalars_slice = scalars.as_slice();
+    let bases = ArkScale::<Vec<SWAffine<C>>>::decode(&mut bases_slice).unwrap();
+    let scalars = ArkScale::<Vec<C::ScalarField>>::decode(&mut scalars_slice).unwrap();
     let _ = C::msm(&bases.0, &scalars.0).unwrap();
 }
 
 fn mul_projective_sw<C: SWCurveConfig>(base: Vec<u8>, scalar: Vec<u8>) {
-    let base = ArkScaleProjective::<SWProjective<C>>::decode(&mut base.as_slice()).unwrap();
-    let scalar = ArkScale::<Vec<u64>>::decode(&mut scalar.as_slice()).unwrap();
+    let mut base_slice = base.as_slice();
+    let mut scalar_slice = scalar.as_slice();
+    let base = ArkScaleProjective::<SWProjective<C>>::decode(&mut base_slice).unwrap();
+    let scalar = ArkScale::<Vec<u64>>::decode(&mut scalar_slice).unwrap();
     let _ = C::mul_projective(&base.0, &scalar.0);
 }
 
 fn mul_affine_sw<C: SWCurveConfig>(base: Vec<u8>, scalar: Vec<u8>) {
-    let base = ArkScale::<SWAffine<C>>::decode(&mut base.as_slice()).unwrap();
-    let scalar = ArkScale::<Vec<u64>>::decode(&mut scalar.as_slice()).unwrap();
+    let mut base_slice = base.as_slice();
+    let mut scalar_slice = scalar.as_slice();
+    let base = ArkScale::<SWAffine<C>>::decode(&mut base_slice).unwrap();
+    let scalar = ArkScale::<Vec<u64>>::decode(&mut scalar_slice).unwrap();
     let _ = C::mul_affine(&base.0, &scalar.0);
 }
 
 fn msm_te<C: TECurveConfig>(bases: Vec<u8>, scalars: Vec<u8>) {
-    let bases = ArkScale::<Vec<TEAffine<C>>>::decode(&mut bases.as_slice()).unwrap();
-    let scalars = ArkScale::<Vec<C::ScalarField>>::decode(&mut scalars.as_slice()).unwrap();
+    let mut bases_slice = bases.as_slice();
+    let mut scalars_slice = scalars.as_slice();
+    let bases = ArkScale::<Vec<TEAffine<C>>>::decode(&mut bases_slice).unwrap();
+    let scalars = ArkScale::<Vec<C::ScalarField>>::decode(&mut scalars_slice).unwrap();
     let _ = C::msm(&bases.0, &scalars.0).unwrap();
 }
 
 fn mul_projective_te<C: TECurveConfig>(base: Vec<u8>, scalar: Vec<u8>) {
-    let base = ArkScaleProjective::<TEProjective<C>>::decode(&mut base.as_slice()).unwrap();
-    let scalar = ArkScale::<Vec<u64>>::decode(&mut scalar.as_slice()).unwrap();
+    let mut base_slice = base.as_slice();
+    let mut scalar_slice = scalar.as_slice();
+    let base = ArkScaleProjective::<TEProjective<C>>::decode(&mut base_slice).unwrap();
+    let scalar = ArkScale::<Vec<u64>>::decode(&mut scalar_slice).unwrap();
     let _ = C::mul_projective(&base.0, &scalar.0);
 }
 
 fn mul_affine_te<C: TECurveConfig>(base: Vec<u8>, scalar: Vec<u8>) {
-    let base = ArkScale::<TEAffine<C>>::decode(&mut base.as_slice()).unwrap();
-    let scalar = ArkScale::<Vec<u64>>::decode(&mut scalar.as_slice()).unwrap();
+    let mut base_slice = base.as_slice();
+    let mut scalar_slice = scalar.as_slice();
+    let base = ArkScale::<TEAffine<C>>::decode(&mut base_slice).unwrap();
+    let scalar = ArkScale::<Vec<u64>>::decode(&mut scalar_slice).unwrap();
     let _ = C::mul_affine(&base.0, &scalar.0);
 }
 
 fn pairing<P: Pairing>(a: Vec<u8>, b: Vec<u8>) {
-    let a = ArkScale::<P::G1Affine>::decode(&mut a.as_slice()).unwrap();
-    let b = ArkScale::<P::G2Affine>::decode(&mut b.as_slice()).unwrap();
+    let mut a_slice = a.as_slice();
+    let mut b_slice = b.as_slice();
+    let a = ArkScale::<P::G1Affine>::decode(&mut a_slice).unwrap();
+    let b = ArkScale::<P::G2Affine>::decode(&mut b_slice).unwrap();
     let _ = P::multi_pairing([a.0], [b.0]);
 }
 

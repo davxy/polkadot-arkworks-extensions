@@ -29,9 +29,7 @@ pub type ArkScaleHost<T> = ark_scale::ArkScale<T, { ark_scale::HOST_CALL }>;
 pub use pallet::*;
 pub use weights::*;
 
-use crate::utils::deserialize_uncompressed_host;
-
-const DEFAULT_WEIGHT: u64 = 10_000;
+use ark_scale::scale::Decode;
 
 pub type ScalarFieldFor<PairingT> = <PairingT as Pairing>::ScalarField;
 
@@ -44,10 +42,15 @@ pub type ProverKeyFor<PairingT> =
 pub type ProofFor<PairingT> =
     <Groth16<PairingT> as SNARK<<PairingT as Pairing>::ScalarField>>::Proof;
 
+const DEFAULT_WEIGHT: u64 = 10_000;
+
 pub fn groth16_verify<P: Pairing>(vk: Vec<u8>, c: Vec<u8>, proof: Vec<u8>) {
-    let vk = deserialize_uncompressed_host::<VerifierKeyFor<P>>(vk);
-    let c = deserialize_uncompressed_host::<ScalarFieldFor<P>>(c);
-    let proof = deserialize_uncompressed_host::<ProofFor<P>>(proof);
+    let mut vk_slice = vk.as_slice();
+    let mut c_slice = c.as_slice();
+    let mut proof_slice = proof.as_slice();
+    let vk = ArkScaleHost::<VerifierKeyFor<P>>::decode(&mut vk_slice).unwrap().0;
+    let c = ArkScaleHost::<ScalarFieldFor<P>>::decode(&mut c_slice).unwrap().0;
+    let proof = ArkScaleHost::<ProofFor<P>>::decode(&mut proof_slice).unwrap().0;
     let result = Groth16::<P>::verify(&vk, &[c], &proof).unwrap();
     assert!(result);
 }

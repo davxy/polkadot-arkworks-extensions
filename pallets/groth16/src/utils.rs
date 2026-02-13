@@ -19,10 +19,6 @@ pub fn serialize_uncompressed_host(argument: impl CanonicalSerialize) -> Vec<u8>
     ArkScaleHost::from(argument).encode()
 }
 
-pub fn deserialize_uncompressed_host<T: CanonicalDeserialize>(data: impl AsRef<[u8]>) -> T {
-    ArkScaleHost::decode(&mut data.as_ref()).unwrap().0
-}
-
 pub fn deserialize_compressed_wire<T: CanonicalDeserialize>(data: impl AsRef<[u8]>) -> T {
     ArkScaleWire::decode(&mut data.as_ref()).unwrap().0
 }

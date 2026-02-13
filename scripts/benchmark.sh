@@ -14,7 +14,7 @@ if [[ $extra_arg != "--no-compile" ]] || [[ ! -f $binary ]]; then
 fi
 
 # How many repetitions of each benchmark should be run
-repeat=${REPEAT:-3}
+repeat=${REPEAT:-10}
 # How many samples we should take across the variable components
 steps=${STEPS:-5}
 

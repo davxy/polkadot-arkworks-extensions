@@ -48,6 +48,91 @@ fn ring_verify_batch(optimized: bool) {
     Pallet::<Test>::ring_verify_batch(RuntimeOrigin::none(), batch, optimized).unwrap()
 }
 
+use std::time::Instant;
+
+fn ietf_verify_bench(optimized: bool) {
+    let (public_raw, input_raw, output_raw, proof_raw) = utils::ietf_verify_params_gen();
+
+    // Warmup and verify once
+    Pallet::<Test>::ietf_verify(
+        RuntimeOrigin::none(),
+        public_raw.clone(),
+        input_raw.clone(),
+        output_raw.clone(),
+        proof_raw.clone(),
+        optimized,
+    )
+    .expect("Verification failed during warmup");
+
+    let start = Instant::now();
+    for _ in 0..100 {
+        let _ = Pallet::<Test>::ietf_verify(
+            RuntimeOrigin::none(),
+            public_raw.clone(),
+            input_raw.clone(),
+            output_raw.clone(),
+            proof_raw.clone(),
+            optimized,
+        );
+    }
+    let elapsed = start.elapsed();
+    println!(
+        "IETF VRF Verify ({}): Total time for 100 iterations: {:?}, Avg: {:?}",
+        if optimized { "Host" } else { "Wasm" },
+        elapsed,
+        elapsed / 100
+    );
+}
+
+fn ring_verify_bench(optimized: bool, ring_size: u32) {
+    let origin = RuntimeOrigin::none();
+    let members = utils::ring_members_gen_raw(ring_size);
+
+    // Setup ring
+    Pallet::<Test>::ring_reset(origin.clone()).unwrap();
+    Pallet::<Test>::push_members(origin.clone(), members.clone(), optimized).unwrap();
+    Pallet::<Test>::ring_commit(origin.clone(), optimized).unwrap();
+
+    let items = utils::ring_verify_params_gen(MaxRingSize::get(), Some(&members), 1);
+    let item = &items[0];
+
+    let start = Instant::now();
+    for _ in 0..10 {
+        Pallet::<Test>::ring_verify(
+            RuntimeOrigin::none(),
+            item.input.clone(),
+            item.output.clone(),
+            item.proof.clone(),
+            optimized,
+        )
+        .unwrap();
+    }
+    let elapsed = start.elapsed();
+    println!(
+        "Ring VRF Verify ({}): Total time for 10 iterations (ring_size={}): {:?}, Avg: {:?}",
+        if optimized { "Host" } else { "Wasm" },
+        ring_size,
+        elapsed,
+        elapsed / 10
+    );
+}
+
+#[test]
+fn bench_ietf_vrf() {
+    new_test_ext().execute_with(|| {
+        ietf_verify_bench(false);
+        ietf_verify_bench(true);
+    });
+}
+
+#[test]
+fn bench_ring_vrf() {
+    new_test_ext().execute_with(|| {
+        ring_verify_bench(false, 42);
+        ring_verify_bench(true, 42);
+    });
+}
+
 #[test]
 fn ark_ietf_verify() {
     new_test_ext().execute_with(|| ietf_verify(false));
